@@ -3,8 +3,8 @@ version: '3'
 services:
   httpd:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: .devcontainer/Dockerfile
     volumes:
-      - ..:/workspace:delegated
+      - ..:/workspace:cached
     command: /bin/sh -c "while sleep 1000; do :; done"
