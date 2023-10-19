@@ -34,9 +34,17 @@ class GuestService:
         else:
             raise GuestNotFoundException(f"No guest found with public key: {key}")
 
-
     def create(self, guest: Guest) -> Guest:
-        raise NotImplementedError()
+        guest_entity = GuestEntity.from_model(guest)
+        self._session.add(guest_entity)
+        self._session.commit()
+        return guest_entity.to_model()
 
-    def delete(self, guest: Guest) -> None:
-        raise NotImplementedError()
+    def delete(self, id: int) -> None:
+        guest_entity = self._session.get(GuestEntity, id)
+        if guest_entity:
+            self._session.delete(guest_entity)
+            self._session.commit()
+        else:
+            raise GuestNotFoundException(f"No guest found with ID: {id}")
+        
