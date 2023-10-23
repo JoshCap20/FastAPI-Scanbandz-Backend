@@ -6,11 +6,13 @@ class EmailClient(EmailCommunicationClient):
     client = AzureEmailCommunicationClient
 
     @classmethod
-    def send(cls, to_email: str, subject: str, body: str, from_email: str = "tickets@scanbandz.com"):
+    def send(cls, to_email: str, subject: str, body: str, from_email: str = "tickets@scanbandz.com") -> bool:
         try:
             cls.client.send_email(to_email=to_email, subject=subject, body=body, from_email=from_email)
+            return True
         except EmailFailureException as ex:
             cls.handle_error(to_email=to_email, subject=subject, body=body, from_email=from_email)
+            return False
 
     @classmethod
     def handle_error(cls, to_email: str, subject: str, body: str, from_email: str) -> None:
