@@ -1,10 +1,11 @@
 """Definitions of SQLAlchemy table-backed object mappings called entities."""
 
 
-from sqlalchemy import Integer, String
+from datetime import datetime
+from sqlalchemy import Integer, String, DateTime
 from sqlalchemy.orm import Mapped, mapped_column
 from settings.base import Base
-from typing import Self
+from typing import Type
 from models.guest import Guest
 from services.encryption_service import EncryptionService
 
@@ -13,13 +14,17 @@ class GuestEntity(Base):
 
     # General
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    first_name: Mapped[str] = mapped_column(String, index=True)
-    last_name: Mapped[str] = mapped_column(String, index=True)
+    first_name: Mapped[str] = mapped_column(String)
+    last_name: Mapped[str] = mapped_column(String)
+
+    # Contact
+    phone_number: Mapped[str] = mapped_column(String, index=True)
+    email: Mapped[str] = mapped_column(String, index=True)
 
     # Ticket
-    quantity: Mapped[int] = mapped_column(Integer, index=True)
-    used_quantity: Mapped[int] = mapped_column(Integer, index=True)
-    scan_timestamp: Mapped[str] = mapped_column(String, index=True)
+    quantity: Mapped[int] = mapped_column(Integer)
+    used_quantity: Mapped[int] = mapped_column(Integer)
+    scan_timestamp: Mapped[datetime] = mapped_column(DateTime)
 
     # Authentication
     public_key: Mapped[str] = mapped_column(
@@ -29,13 +34,16 @@ class GuestEntity(Base):
         default=lambda: EncryptionService.generate_uuid(),
     )
     private_key: Mapped[str] = mapped_column(
-        String, index=True, default=lambda: EncryptionService.generate_code()
+        String, index=True, unique=True, default=lambda: EncryptionService.generate_code()
     )
+
+    # Metadata
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     # Methods
 
     @classmethod
-    def from_model(cls, model: Guest) -> Self:
+    def from_model(cls: Type['GuestEntity'], model: Guest) -> 'GuestEntity':
         """
         Convert a Guest (Pydantic Model) to a GuestEntity (DB Model).
         """
@@ -43,11 +51,14 @@ class GuestEntity(Base):
             id=model.id,
             first_name=model.first_name,
             last_name=model.last_name,
+            phone_number=model.phone_number,
+            email=model.email,
             quantity=model.quantity,
             used_quantity=model.used_quantity,
             scan_timestamp=model.scan_timestamp,
             public_key=model.public_key,
             private_key=model.private_key,
+            created_at=model.created_at,
         )
     
     def to_model(self) -> Guest:
@@ -58,9 +69,12 @@ class GuestEntity(Base):
             id=self.id,
             first_name=self.first_name,
             last_name=self.last_name,
+            phone_number=self.phone_number,
+            email=self.email,
             quantity=self.quantity,
             used_quantity=self.used_quantity,
             scan_timestamp=self.scan_timestamp,
             public_key=self.public_key,
             private_key=self.private_key,
+            created_at=self.created_at,
         )
