@@ -39,6 +39,7 @@ class GuestEntity(Base):
 
     # Metadata
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     # Methods
 
@@ -59,6 +60,7 @@ class GuestEntity(Base):
             public_key=model.public_key,
             private_key=model.private_key,
             created_at=model.created_at,
+            updated_at=model.updated_at,
         )
     
     def to_model(self) -> Guest:
@@ -77,4 +79,5 @@ class GuestEntity(Base):
             public_key=self.public_key,
             private_key=self.private_key,
             created_at=self.created_at,
+            updated_at=self.updated_at,
         )

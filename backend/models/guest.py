@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from datetime import datetime
 
 class Guest(BaseModel):
@@ -25,4 +25,5 @@ class Guest(BaseModel):
     private_key: str
 
     # Metadata
-    created_at: datetime
+    created_at: datetime | None = Field(None)
+    updated_at: datetime | None = Field(None)
