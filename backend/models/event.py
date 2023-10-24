@@ -1,5 +1,9 @@
 from datetime import datetime
-from pydantic import BaseModel, Field
+from typing import List
+from pydantic import BaseModel
+from models.host import Host
+
+from models.ticket import Ticket
 
 class Event(BaseModel):
     # General
@@ -11,13 +15,13 @@ class Event(BaseModel):
     end: datetime
 
     # Relationships
-    # tickets: Ticket TODO: Add ticket model
-    # host: Host TODO: Add host model
+    tickets: List[Ticket]
+    host: Host
 
     # Authentication
     public_key: str
     private_key: str
 
     # Metadata
-    created_at: datetime | None = Field(None)
-    updated_at: datetime | None = Field(None)
+    created_at: datetime | None = None
+    updated_at: datetime | None = None

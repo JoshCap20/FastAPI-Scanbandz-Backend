@@ -1,6 +1,6 @@
 from datetime import datetime
 from decimal import Decimal
-from sqlalchemy import Integer, String, DateTime, Boolean, Numeric
+from sqlalchemy import ForeignKey, Integer, String, DateTime, Boolean, Numeric
 from sqlalchemy.orm import Mapped, mapped_column
 from settings.base import Base
 from typing import Type
@@ -23,7 +23,7 @@ class TicketEntity(Base):
     registration_active: Mapped[bool] = mapped_column(Boolean)
 
     # Relationships
-    event_id: Mapped[int] = mapped_column(Integer, index=True)
+    event_id: Mapped[int] = mapped_column(Integer, ForeignKey("events.id"))
 
     # Authentication
     public_key: Mapped[str] = mapped_column(

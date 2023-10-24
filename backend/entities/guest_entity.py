@@ -3,7 +3,9 @@
 
 from datetime import datetime
 from sqlalchemy import Integer, String, DateTime
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from entities.ticket_entity import TicketEntity
+from entities.event_entity import EventEntity
 from settings.base import Base
 from typing import Type
 from models.guest import Guest
@@ -25,6 +27,10 @@ class GuestEntity(Base):
     quantity: Mapped[int] = mapped_column(Integer)
     used_quantity: Mapped[int] = mapped_column(Integer)
     scan_timestamp: Mapped[datetime] = mapped_column(DateTime)
+
+    # Relationships
+    event: Mapped["EventEntity"] = relationship("EventEntity")
+    ticket: Mapped["TicketEntity"] = relationship("TicketEntity")
 
     # Authentication
     public_key: Mapped[str] = mapped_column(
@@ -57,6 +63,8 @@ class GuestEntity(Base):
             quantity=model.quantity,
             used_quantity=model.used_quantity,
             scan_timestamp=model.scan_timestamp,
+            event=model.event,
+            ticket=model.ticket,
             public_key=model.public_key,
             private_key=model.private_key,
             created_at=model.created_at,
@@ -76,6 +84,8 @@ class GuestEntity(Base):
             quantity=self.quantity,
             used_quantity=self.used_quantity,
             scan_timestamp=self.scan_timestamp,
+            event=self.event.to_model(),
+            ticket=self.ticket.to_model(),
             public_key=self.public_key,
             private_key=self.private_key,
             created_at=self.created_at,

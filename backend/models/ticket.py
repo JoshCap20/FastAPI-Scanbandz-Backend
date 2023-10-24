@@ -1,12 +1,12 @@
 from decimal import Decimal
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from datetime import datetime
 
 class Ticket(BaseModel):
     # General
     id: int
     name: str
-    description: str | None = Field(None)
+    description: str | None = None
     price: Decimal
 
     # Settings
@@ -23,8 +23,8 @@ class Ticket(BaseModel):
     private_key: str
 
     # Metadata
-    created_at: datetime | None = Field(None)
-    updated_at: datetime | None = Field(None)
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
 
 
 

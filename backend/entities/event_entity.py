@@ -3,9 +3,11 @@
 from calendar import c
 from datetime import datetime
 from sqlalchemy import Integer, String, DateTime
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from entities.host_entity import HostEntity
+from entities.ticket_entity import TicketEntity
 from settings.base import Base
-from typing import Type
+from typing import List, Type
 from models.event import Event
 from services.encryption_service import EncryptionService
 
@@ -21,8 +23,8 @@ class EventEntity(Base):
     end: Mapped[datetime] = mapped_column(DateTime)
 
     # Relationships
-    # tickets: Ticket TODO: Add ticket model
-    # host: Host TODO: Add host model
+    tickets: Mapped[List["TicketEntity"]] = relationship("TicketEntity", back_populates="event")
+    host: Mapped["HostEntity"] = relationship("HostEntity")
 
     # Authentication
     public_key: Mapped[str] = mapped_column(
@@ -52,6 +54,8 @@ class EventEntity(Base):
             location=model.location,
             start=model.start,
             end=model.end,
+            tickets=[TicketEntity.from_model(ticket) for ticket in model.tickets],
+            host=HostEntity.from_model(model.host),
             public_key=model.public_key,
             private_key=model.private_key,
             created_at=model.created_at,
@@ -69,6 +73,8 @@ class EventEntity(Base):
             location=self.location,
             start=self.start,
             end=self.end,
+            tickets=[ticket.to_model() for ticket in self.tickets],
+            host=self.host.to_model(),
             public_key=self.public_key,
             private_key=self.private_key,
             created_at=self.created_at,

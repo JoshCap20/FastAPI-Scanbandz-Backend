@@ -1,5 +1,4 @@
-from decimal import Decimal
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from datetime import datetime
 
 class Host(BaseModel):
@@ -17,7 +16,7 @@ class Host(BaseModel):
     stripe_id: str | None = None
 
     # Metadata
-    is_active: bool | None = True
-    is_superuser: bool | None = False
+    is_active: bool | None = None
+    is_superuser: bool | None = None
     created_at: datetime | None = None
     updated_at: datetime | None = None
