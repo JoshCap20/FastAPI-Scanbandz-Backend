@@ -3,7 +3,7 @@ from datetime import datetime
 
 class Host(BaseModel):
     # General
-    id: int
+    id: int | None = None
     first_name: str
     last_name: str
 
