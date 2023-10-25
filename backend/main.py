@@ -1,5 +1,6 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from apis.webhooks import router as webhooks
 
 app = FastAPI()
 
@@ -17,13 +18,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# app.include_router(
-#     payments.router,
-#     prefix="/payments",
-#     tags=["payments"],
-#     responses={404: {"description": "Not found"}},
-#     dependencies=[Depends(get_db)]
-# )
+app.include_router(
+    webhooks,
+)
 
 
 @app.get("/")
