@@ -1,4 +1,4 @@
-from backend.exceptions.ticket_exceptions import TicketNotFoundException
+from exceptions.ticket_exceptions import TicketNotFoundException
 from entities.ticket_entity import TicketEntity
 from models.ticket import Ticket
 from settings.database import db_session

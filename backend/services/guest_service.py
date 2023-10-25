@@ -1,4 +1,4 @@
-from backend.exceptions.guest_exceptions import GuestNotFoundException
+from exceptions.guest_exceptions import GuestNotFoundException
 from settings.database import db_session
 from sqlalchemy.orm import Session
 from fastapi import Depends

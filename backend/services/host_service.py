@@ -1,5 +1,5 @@
-from backend.exceptions.host_exceptions import HostNotFoundException
-from backend.exceptions.ticket_exceptions import TicketNotFoundException
+from exceptions.host_exceptions import HostNotFoundException
+from exceptions.ticket_exceptions import TicketNotFoundException
 from entities.host_entity import HostEntity
 from models.host import Host
 from settings.database import db_session
