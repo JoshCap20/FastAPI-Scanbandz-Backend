@@ -32,6 +32,10 @@ class Host(BaseModel):
         if len(phone_number) != 10:
             # TODO: Add non-US phone number support
             raise ValueError("Phone number should be 10 characters long")
+        
+        if not phone_number.isdigit():
+            raise ValueError("Phone number should only contain digits")
+        
         return phone_number
     
     @validator("first_name", pre=True, always=True)

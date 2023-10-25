@@ -28,6 +28,17 @@ def test_host_password_validation():
         )
 
 @pytest.mark.unit
+def test_host_phone_number_validation_invalid_digits():
+    with pytest.raises(ValueError):
+        Host(
+            first_name="Test",
+            last_name="Host",
+            phone_number="123456789a",
+            email="test@gmail.com",
+            password="test1234567"
+        )
+
+@pytest.mark.unit
 def test_host_non_us_phone_number_validation():
     with pytest.raises(ValueError):
         Host(
@@ -68,5 +79,38 @@ def test_host_last_name_validation():
             last_name="",
             phone_number="1234567890",
             email="test@gmail.com",
+            password="test1234567"
+        )
+
+@pytest.mark.unit
+def test_invalid_email_validation():
+    with pytest.raises(ValueError):
+        Host(
+            first_name="Test",
+            last_name="Host",
+            phone_number="1234567890",
+            email="testgmail.com",
+            password="test1234567"
+        )
+
+@pytest.mark.unit
+def test_invalid_email_validation_two():
+    with pytest.raises(ValueError):
+        Host(
+            first_name="Test",
+            last_name="Host",
+            phone_number="1234567890",
+            email="test@gmailcom",
+            password="test1234567"
+        )
+
+@pytest.mark.unit
+def test_invalid_email_validation_three():
+    with pytest.raises(ValueError):
+        Host(
+            first_name="Test",
+            last_name="Host",
+            phone_number="1234567890",
+            email="test@@gmail.com",
             password="test1234567"
         )
