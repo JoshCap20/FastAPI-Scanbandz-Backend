@@ -5,7 +5,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from settings.base import Base
 from typing import Type
 from models.ticket import Ticket
-from services.encryption_service import EncryptionService
+from utils.encryption_service import EncryptionService
 
 class TicketEntity(Base):
     __tablename__ = "tickets"

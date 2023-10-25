@@ -9,7 +9,7 @@ from entities.event_entity import EventEntity
 from settings.base import Base
 from typing import Type
 from models.guest import Guest
-from services.encryption_service import EncryptionService
+from utils.encryption_service import EncryptionService
 
 class GuestEntity(Base):
     __tablename__ = "guests"

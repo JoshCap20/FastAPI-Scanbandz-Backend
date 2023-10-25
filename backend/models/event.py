@@ -7,7 +7,7 @@ from models.ticket import Ticket
 
 class Event(BaseModel):
     # General
-    id: int
+    id: int | None = None
     name: str
     description: str
     location: str # TODO: Add location class
@@ -15,13 +15,14 @@ class Event(BaseModel):
     end: datetime
 
     # Relationships
-    tickets: List[Ticket]
-    host: Host
+    tickets: List[Ticket] | None = None
+    host: Host | None = None
 
     # Authentication
-    public_key: str
-    private_key: str
+    public_key: str | None = None
+    private_key: str | None = None
 
     # Metadata
     created_at: datetime | None = None
     updated_at: datetime | None = None
+

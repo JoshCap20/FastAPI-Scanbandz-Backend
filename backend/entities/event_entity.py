@@ -9,7 +9,7 @@ from entities.ticket_entity import TicketEntity
 from settings.base import Base
 from typing import List, Type
 from models.event import Event
-from services.encryption_service import EncryptionService
+from utils.encryption_service import EncryptionService
 
 class EventEntity(Base):
     __tablename__ = "events"
