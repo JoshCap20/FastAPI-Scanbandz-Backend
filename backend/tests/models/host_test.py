@@ -1,7 +1,6 @@
-from ...models.host import Host
+from models.host import Host
 import pytest
 
-@pytest.mark.unit
 def test_new_host():
     host = Host(
         first_name="Test",
@@ -16,7 +15,6 @@ def test_new_host():
     assert host.email == "test@gmail.com"
     assert host.password == "test1234567"
 
-@pytest.mark.unit
 def test_host_password_validation():
     with pytest.raises(ValueError):
         Host(
@@ -27,7 +25,6 @@ def test_host_password_validation():
             password="test"
         )
 
-@pytest.mark.unit
 def test_host_phone_number_validation_invalid_digits():
     with pytest.raises(ValueError):
         Host(
@@ -38,7 +35,6 @@ def test_host_phone_number_validation_invalid_digits():
             password="test1234567"
         )
 
-@pytest.mark.unit
 def test_host_non_us_phone_number_validation():
     with pytest.raises(ValueError):
         Host(
@@ -49,7 +45,6 @@ def test_host_non_us_phone_number_validation():
             password="test1234567"
         )
 
-@pytest.mark.unit
 def test_host_non_us_phone_number_validation_extra():
     with pytest.raises(ValueError):
         Host(
@@ -60,7 +55,6 @@ def test_host_non_us_phone_number_validation_extra():
             password="test1234567"
         )
 
-@pytest.mark.unit
 def test_host_first_name_validation():
     with pytest.raises(ValueError):
         Host(
@@ -71,7 +65,6 @@ def test_host_first_name_validation():
             password="test1234567"
         )
 
-@pytest.mark.unit
 def test_host_last_name_validation():
     with pytest.raises(ValueError):
         Host(
@@ -82,7 +75,6 @@ def test_host_last_name_validation():
             password="test1234567"
         )
 
-@pytest.mark.unit
 def test_invalid_email_validation():
     with pytest.raises(ValueError):
         Host(
@@ -93,7 +85,6 @@ def test_invalid_email_validation():
             password="test1234567"
         )
 
-@pytest.mark.unit
 def test_invalid_email_validation_two():
     with pytest.raises(ValueError):
         Host(
@@ -104,7 +95,6 @@ def test_invalid_email_validation_two():
             password="test1234567"
         )
 
-@pytest.mark.unit
 def test_invalid_email_validation_three():
     with pytest.raises(ValueError):
         Host(
