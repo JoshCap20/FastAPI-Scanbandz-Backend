@@ -5,7 +5,7 @@ from .authentication import registered_user
 from ..models import Event, BaseEvent, Host, EventPublic
 from ..services.event_service import EventService
 from ..utils.dev_only import dev_only
-from ..exceptions import EventNotFoundException
+from ..exceptions import EventNotFoundException, HostPermissionError
 
 api = APIRouter(prefix="/api/events")
 openapi_tags = {
@@ -42,6 +42,8 @@ def update_event(
         )
     except EventNotFoundException:
         raise HTTPException(status_code=404, detail="Event not found")
+    except HostPermissionError:
+        raise HTTPException(status_code=403, detail="Invalid permission to update event")
 
 
 @api.get("/get/{event_id}", response_model=EventPublic, tags=["Events"])
