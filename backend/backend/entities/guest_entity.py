@@ -9,7 +9,7 @@ from sqlalchemy.sql.schema import ForeignKey
 from .ticket_entity import TicketEntity
 from .event_entity import EventEntity
 from .base import Base
-from ..models.guest import Guest
+from ..models import Guest
 from ..utils.encryption_service import EncryptionService
 
 

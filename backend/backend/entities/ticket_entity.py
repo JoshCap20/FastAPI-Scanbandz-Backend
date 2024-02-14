@@ -5,7 +5,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from typing import Type
 
 from .base import Base
-from ..models.ticket import Ticket
+from ..models import Ticket, BaseTicket
 from ..utils.encryption_service import EncryptionService
 
 
@@ -20,7 +20,6 @@ class TicketEntity(Base):
 
     # Settings
     max_quantity: Mapped[int] = mapped_column(Integer)
-    used_quantity: Mapped[int] = mapped_column(Integer)
     visibility: Mapped[bool] = mapped_column(Boolean)
     registration_active: Mapped[bool] = mapped_column(Boolean)
 
@@ -51,6 +50,21 @@ class TicketEntity(Base):
         DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
     )
 
+    @classmethod
+    def from_base_model(cls: Type["TicketEntity"], model: BaseTicket) -> "TicketEntity":
+        """
+        Convert a BaseTicket (Pydantic Model) to a TicketEntity (DB Model).
+        """
+        return cls(
+            name=model.name,
+            description=model.description,
+            price=model.price,
+            max_quantity=model.max_quantity,
+            visibility=model.visibility,
+            registration_active=model.registration_active,
+            event_id=model.event_id,
+        )
+
     # Methods
     @classmethod
     def from_model(cls: Type["TicketEntity"], model: Ticket) -> "TicketEntity":
@@ -63,7 +77,6 @@ class TicketEntity(Base):
             description=model.description,
             price=model.price,
             max_quantity=model.max_quantity,
-            used_quantity=model.used_quantity,
             visibility=model.visibility,
             registration_active=model.registration_active,
             event_id=model.event_id,
@@ -83,7 +96,6 @@ class TicketEntity(Base):
             description=self.description,
             price=self.price,
             max_quantity=self.max_quantity,
-            used_quantity=self.used_quantity,
             visibility=self.visibility,
             registration_active=self.registration_active,
             event_id=self.event_id,

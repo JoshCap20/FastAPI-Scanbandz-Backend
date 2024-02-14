@@ -2,7 +2,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
-from .apis import webhooks, hosts, events, authentication
+from .apis import webhooks, hosts, events, authentication, tickets
 from .exceptions import HostPermissionError
 
 description = """
@@ -19,6 +19,7 @@ app = FastAPI(
         hosts.openapi_tags,
         events.openapi_tags,
         authentication.openapi_tags,
+        tickets.openapi_tags,
     ],
 )
 
@@ -36,7 +37,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-feature_apis = [webhooks, hosts, events, authentication]
+feature_apis = [webhooks, hosts, events, authentication, tickets]
 
 for feature_api in feature_apis:
     app.include_router(feature_api.api)

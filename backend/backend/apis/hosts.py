@@ -3,7 +3,6 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.exc import IntegrityError
 
 from ..models import BaseHost, Host
-from ..entities import HostEntity
 from ..services.host_service import HostService
 from ..utils.dev_only import dev_only
 
@@ -16,10 +15,10 @@ openapi_tags = {
 
 @api.post("/register", tags=["Hosts"])
 def register_host(
-    host: BaseHost, host_service: HostService = Depends()
+    new_host: BaseHost, host_service: HostService = Depends()
 ) -> JSONResponse:
     try:
-        host: Host = host_service.create(host)
+        host: Host = host_service.create(new_host)
     except IntegrityError as e:
         detail = "An account with the provided email or phone number already exists."
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=detail)
