@@ -1,9 +1,8 @@
 from datetime import datetime
-from typing import List
 from pydantic import BaseModel, validator
 
-from .host import Host
-from .ticket import Ticket
+from .host import Host, HostPublic
+from .ticket import Ticket, TicketPublic
 
 class EventIdentity(BaseModel):
     id: int
@@ -31,8 +30,7 @@ class BaseEvent(BaseModel):
 
 class Event(BaseEvent, EventIdentity):
     # Relationships
-    tickets: List[Ticket] | None = None
-    host_id: int | None = None
+    tickets: list[Ticket] | None = None
     host: Host | None = None
 
     # Authentication
@@ -42,3 +40,36 @@ class Event(BaseEvent, EventIdentity):
     # Metadata
     created_at: datetime | None = None
     updated_at: datetime | None = None
+ 
+# Public version of the Event model excluding sensitive and unnecessary fields   
+class EventPublic(BaseModel):
+    id: int
+    name: str
+    description: str
+    location: str
+    start: datetime
+    end: datetime
+    tickets: list[TicketPublic] | None = None
+    host: HostPublic | None = None
+    public_key: str | None = None
+
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+    
+    @classmethod
+    def from_event(cls, event: Event, include_stripe_id: bool = False) -> "EventPublic":
+        """
+        Create an EventPublic instance from an Event model instance or dict.
+        """
+        return cls(
+            id=event.id,
+            name=event.name,
+            description=event.description,
+            location=event.location,
+            start=event.start,
+            end=event.end,
+            tickets=[TicketPublic.from_ticket(ticket) for ticket in event.tickets] if event.tickets else None,
+            host_id=event.host_id,
+            host=HostPublic.from_host(event.host, include_stripe_id=include_stripe_id) if event.host else None,
+            public_key=event.public_key,
+        )

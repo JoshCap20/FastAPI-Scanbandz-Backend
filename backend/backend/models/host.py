@@ -57,3 +57,30 @@ class Host(BaseHost, HostIdentity):
     is_superuser: bool | None = None
     created_at: datetime | None = None
     updated_at: datetime | None = None
+    
+# Public version of the Host model excluding sensitive and unnecessary fields
+class HostPublic(BaseModel):
+    id: int
+    first_name: str
+    last_name: str
+    email: EmailStr
+    stripe_id: str | None = None
+
+    # Conditionally include fields
+    def __init__(self, **data):
+        include_stripe_id = data.pop('include_stripe_id', False)
+        super().__init__(**data)
+        if not include_stripe_id:
+            self.stripe_id = None
+
+    # Custom method to create an instance from a Host model
+    @classmethod
+    def from_host(cls, host: Host, include_stripe_id: bool = False) -> "HostPublic":
+        return cls(
+            id=host.id,
+            first_name=host.first_name,
+            last_name=host.last_name,
+            email=host.email,
+            stripe_id=host.stripe_id if include_stripe_id else None,
+            include_stripe_id=include_stripe_id # Popped in init
+        )

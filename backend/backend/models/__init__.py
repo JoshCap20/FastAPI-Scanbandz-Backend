@@ -1,5 +1,5 @@
-from .event import Event, BaseEvent, EventIdentity
+from .event import Event, BaseEvent, EventIdentity, EventPublic
 from .guest import Guest, BaseGuest, GuestIdentity
-from .ticket import Ticket
-from .host import Host, BaseHost, HostIdentity
+from .ticket import Ticket, TicketPublic
+from .host import Host, BaseHost, HostIdentity, HostPublic
 from .authentication import LoginCredentials

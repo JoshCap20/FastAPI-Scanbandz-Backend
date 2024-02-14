@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.exc import IntegrityError
 
 from .authentication import registered_user
-from ..models import Event, BaseEvent, Host
+from ..models import Event, BaseEvent, Host, EventPublic
 from ..entities import HostEntity
 from ..services.event_service import EventService
 from ..utils.dev_only import dev_only
@@ -26,11 +26,11 @@ def new_event(
         content={"message": "Event created successfully."},
     )
     
-@api.get("/get/{event_id}", response_model=Event, tags=["Events"])
-def get_event(event_id: int, event_service: EventService = Depends()) -> Event:
+@api.get("/get/{event_id}", response_model=EventPublic, tags=["Events"])
+def get_event(event_id: int, event_service: EventService = Depends()) -> EventPublic:
     try:
         event: Event = event_service.get_by_id(event_id)
-        return event
+        return EventPublic.from_event(event)
     except EventNotFoundException:
         raise HTTPException(status_code=404, detail="Event not found")
 

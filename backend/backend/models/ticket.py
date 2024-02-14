@@ -33,7 +33,31 @@ class Ticket(BaseModel):
         return price
 
 
-
-
-
-
+# Public version of the Ticket model excluding sensitive and unnecessary fields
+class TicketPublic(BaseModel):
+    id: int
+    name: str
+    description: str | None = None
+    price: Decimal
+    max_quantity: int
+    used_quantity: int
+    visibility: bool
+    registration_active: bool
+    event_id: int
+    
+    @classmethod
+    def from_ticket(cls, ticket: Ticket) -> "TicketPublic":
+        """
+        Create a TicketPublic instance from a Ticket model instance or dict.
+        """
+        return cls(
+            id=ticket.id,
+            name=ticket.name,
+            description=ticket.description,
+            price=ticket.price,
+            max_quantity=ticket.max_quantity,
+            used_quantity=ticket.used_quantity,
+            visibility=ticket.visibility,
+            registration_active=ticket.registration_active,
+            event_id=ticket.event_id,
+        )
