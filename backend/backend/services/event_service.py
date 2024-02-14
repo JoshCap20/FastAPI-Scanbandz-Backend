@@ -1,4 +1,4 @@
-from ..entities.event_entity import EventEntity
+from ..entities.event_entity import EventEntity, TicketEntity
 from ..exceptions import EventNotFoundException, HostPermissionError
 from ..models import Event, BaseEvent, Host
 from ..database import db_session
@@ -143,26 +143,30 @@ class EventService:
 
     def delete(self, id: int, host: Host) -> None:
         """
-        Deletes an event with the specified ID if the host has permission.
+        Delete an event and its associated tickets from the database.
 
         Args:
-            id (int): The ID of the event to delete.
+            id (int): The ID of the event to be deleted.
             host (Host): The host object representing the user attempting to delete the event.
 
         Raises:
             EventNotFoundException: If the event with the specified ID does not exist.
-            HostPermissionError: If the host does not have permission to delete the event.
+            HostPermissionError: If the user does not have permission to delete the event.
 
         Returns:
             None
         """
         event_entity: EventEntity | None = self._session.get(EventEntity, id)
-
+        tickets: Sequence[TicketEntity] = event_entity.tickets
+        
         if not event_entity:
             raise EventNotFoundException(id)
 
         if event_entity.host_id != host.id:
             raise HostPermissionError()
+        
+        for ticket in tickets:
+            self._session.delete(ticket)
 
         self._session.delete(event_entity)
         self._session.commit()

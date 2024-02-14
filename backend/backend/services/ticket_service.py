@@ -1,5 +1,5 @@
-from ..exceptions import TicketNotFoundException, HostPermissionError
-from ..entities import TicketEntity
+from ..exceptions import TicketNotFoundException, HostPermissionError, EventNotFoundException
+from ..entities import TicketEntity, EventEntity
 from ..models import Ticket, Host
 from ..database import db_session
 
@@ -103,8 +103,12 @@ class TicketService:
             HostPermissionError: If the host does not have permission to create the ticket.
         """
         ticket_entity: TicketEntity = TicketEntity.from_model(ticket)
+        event_entity: EventEntity | None = self._session.get(EventEntity, ticket.event_id)
         
-        if ticket_entity.event.host_id != host.id:
+        if not event_entity:
+            raise EventNotFoundException(f"Event not found with ID: {ticket.event_id}")
+        
+        if event_entity.host_id != host.id:
             raise HostPermissionError()
         
         self._session.add(ticket_entity)
