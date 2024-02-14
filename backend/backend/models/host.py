@@ -1,9 +1,11 @@
 from pydantic import BaseModel, EmailStr, validator
 from datetime import datetime
 
-class Host(BaseModel):
+class HostIdentity(BaseModel):
+    id: int
+    
+class BaseHost(BaseModel):
     # General
-    id: int | None = None
     first_name: str
     last_name: str
 
@@ -13,13 +15,6 @@ class Host(BaseModel):
 
     # Authentication
     password: str
-    stripe_id: str | None = None
-
-    # Metadata
-    is_active: bool | None = None
-    is_superuser: bool | None = None
-    created_at: datetime | None = None
-    updated_at: datetime | None = None
 
     @validator("password", pre=True, always=True)
     def validate_password(cls, password):
@@ -38,6 +33,8 @@ class Host(BaseModel):
         
         return phone_number
     
+
+            
     @validator("first_name", pre=True, always=True)
     def validate_first_name(cls, first_name):
         if len(first_name) < 1:
@@ -49,3 +46,14 @@ class Host(BaseModel):
         if len(last_name) < 1:
             raise ValueError("Last name should be at least 1 character long")
         return last_name
+
+    
+class Host(BaseHost, HostIdentity):
+    # Stripe
+    stripe_id: str | None = None
+
+    # Metadata
+    is_active: bool | None = None
+    is_superuser: bool | None = None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None

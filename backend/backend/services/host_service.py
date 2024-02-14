@@ -1,7 +1,7 @@
 from ..exceptions.host_exceptions import HostNotFoundException
 from ..exceptions.ticket_exceptions import TicketNotFoundException
 from ..entities.host_entity import HostEntity
-from ..models.host import Host
+from ..models import Host, BaseHost, HostIdentity
 from ..database import db_session
 
 from sqlalchemy.orm import Session
@@ -44,8 +44,8 @@ class HostService:
         else:
             raise HostNotFoundException(f"Host not found with email: {key}")
 
-    def create(self, host: Host) -> Host:
-        host_entity = HostEntity.from_model(host)
+    def create(self, host: BaseHost) -> Host:
+        host_entity = HostEntity.from_base_model(host)
         self._session.add(host_entity)
         self._session.commit()
         return host_entity.to_model()
