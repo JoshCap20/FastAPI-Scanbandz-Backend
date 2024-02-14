@@ -4,6 +4,9 @@ from datetime import datetime
 from .event import Event
 from .ticket import Ticket
 
+class GuestIdentity(BaseModel):
+    id: int
+
 class BaseGuest(BaseModel):
     # General
     first_name: str
@@ -42,9 +45,6 @@ class BaseGuest(BaseModel):
         return last_name
 
 class Guest(BaseGuest):
-    # General
-    id: int
-
     # Relationships
     event: Event
     ticket: Ticket

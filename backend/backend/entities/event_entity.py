@@ -8,7 +8,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from .host_entity import HostEntity
 from .ticket_entity import TicketEntity
 from .base import Base
-from ..models.event import Event
+from ..models.event import Event, BaseEvent
 from ..utils.encryption_service import EncryptionService
 
 
@@ -55,6 +55,20 @@ class EventEntity(Base):
     )
 
     # Methods
+    @classmethod
+    def from_base_model(cls: Type["EventEntity"], model: BaseEvent, host_id: int) -> "EventEntity":
+        """
+        Convert a BaseEvent (Pydantic Model) to a EventEntity (DB Model).
+        """
+        return cls(
+            name=model.name,
+            description=model.description,
+            location=model.location,
+            start=model.start,
+            end=model.end,
+            host_id=host_id,
+        )
+        
     @classmethod
     def from_model(cls: Type["EventEntity"], model: Event) -> "EventEntity":
         """
