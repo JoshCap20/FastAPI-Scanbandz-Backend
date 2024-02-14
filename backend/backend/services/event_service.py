@@ -157,14 +157,14 @@ class EventService:
             None
         """
         event_entity: EventEntity | None = self._session.get(EventEntity, id)
-        tickets: Sequence[TicketEntity] = event_entity.tickets
-        
+        tickets: list[TicketEntity] = event_entity.tickets if event_entity else []
+
         if not event_entity:
             raise EventNotFoundException(id)
 
         if event_entity.host_id != host.id:
             raise HostPermissionError()
-        
+
         for ticket in tickets:
             self._session.delete(ticket)
 

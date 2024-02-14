@@ -122,6 +122,39 @@ class TicketService:
         self._session.commit()
         return ticket_entity.to_model()
 
+    def update(self, id: int, ticket: BaseTicket, host: Host) -> Ticket:
+        """
+        Update a ticket with the given ID.
+
+        Args:
+            id (int): The ID of the ticket to be updated.
+            ticket (BaseTicket): The updated ticket object.
+            host (Host): The host object representing the user performing the update.
+
+        Returns:
+            Ticket: The updated ticket object.
+
+        Raises:
+            TicketNotFoundException: If no ticket is found with the given ID.
+            HostPermissionError: If the host does not have permission to update the ticket.
+        """
+        ticket_entity: TicketEntity | None = self._session.get(TicketEntity, id)
+
+        if not ticket_entity:
+            raise TicketNotFoundException(f"Ticket not found with ID: {id}")
+
+        if ticket_entity.event.host_id != host.id:
+            raise HostPermissionError()
+
+        ticket_entity.name = ticket.name
+        ticket_entity.description = ticket.description if ticket.description else ""
+        ticket_entity.price = ticket.price
+        ticket_entity.max_quantity = ticket.max_quantity
+        ticket_entity.visibility = ticket.visibility
+        ticket_entity.registration_active = ticket.registration_active
+        self._session.commit()
+        return ticket_entity.to_model()
+
     def delete(self, id: int, host: Host) -> None:
         """
         Deletes a ticket with the given ID if the host has permission.
