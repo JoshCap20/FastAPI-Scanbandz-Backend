@@ -1,4 +1,5 @@
 """Definitions of SQLAlchemy table-backed object mappings called entities."""
+
 from typing import List, Type
 from datetime import datetime
 from sqlalchemy import Integer, String, DateTime
@@ -6,9 +7,10 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .host_entity import HostEntity
 from .ticket_entity import TicketEntity
-from ..settings.base import Base
+from .base import Base
 from ..models.event import Event
 from ..utils.encryption_service import EncryptionService
+
 
 class EventEntity(Base):
     __tablename__ = "events"
@@ -22,7 +24,9 @@ class EventEntity(Base):
     end: Mapped[datetime] = mapped_column(DateTime)
 
     # Relationships
-    tickets: Mapped[List["TicketEntity"]] = relationship("TicketEntity", back_populates="event")
+    tickets: Mapped[List["TicketEntity"]] = relationship(
+        "TicketEntity", back_populates="event"
+    )
     host: Mapped["HostEntity"] = relationship("HostEntity")
 
     # Authentication
@@ -33,16 +37,21 @@ class EventEntity(Base):
         default=lambda: EncryptionService.generate_uuid(),
     )
     private_key: Mapped[str] = mapped_column(
-        String, index=True, unique=True, default=lambda: EncryptionService.generate_code()
+        String,
+        index=True,
+        unique=True,
+        default=lambda: EncryptionService.generate_code(),
     )
 
     # Metadata
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
+    )
+
     # Methods
     @classmethod
-    def from_model(cls: Type['EventEntity'], model: Event) -> 'EventEntity':
+    def from_model(cls: Type["EventEntity"], model: Event) -> "EventEntity":
         """
         Convert a Event (Pydantic Model) to a EventEntity (DB Model).
         """
@@ -60,7 +69,7 @@ class EventEntity(Base):
             created_at=model.created_at,
             updated_at=model.updated_at,
         )
-    
+
     def to_model(self) -> Event:
         """
         Convert a EventEntity (DB Model) to a Event (Pydantic Model).

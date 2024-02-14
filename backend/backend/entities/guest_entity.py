@@ -1,4 +1,5 @@
 """Definitions of SQLAlchemy table-backed object mappings called entities."""
+
 from typing import Type
 from datetime import datetime
 from sqlalchemy import Integer, String, DateTime
@@ -6,9 +7,10 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .ticket_entity import TicketEntity
 from .event_entity import EventEntity
-from ..settings.base import Base
+from .base import Base
 from ..models.guest import Guest
 from ..utils.encryption_service import EncryptionService
+
 
 class GuestEntity(Base):
     __tablename__ = "guests"
@@ -39,17 +41,22 @@ class GuestEntity(Base):
         default=lambda: EncryptionService.generate_uuid(),
     )
     private_key: Mapped[str] = mapped_column(
-        String, index=True, unique=True, default=lambda: EncryptionService.generate_code()
+        String,
+        index=True,
+        unique=True,
+        default=lambda: EncryptionService.generate_code(),
     )
 
     # Metadata
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
+    )
 
     # Methods
 
     @classmethod
-    def from_model(cls: Type['GuestEntity'], model: Guest) -> 'GuestEntity':
+    def from_model(cls: Type["GuestEntity"], model: Guest) -> "GuestEntity":
         """
         Convert a Guest (Pydantic Model) to a GuestEntity (DB Model).
         """
@@ -69,7 +76,7 @@ class GuestEntity(Base):
             created_at=model.created_at,
             updated_at=model.updated_at,
         )
-    
+
     def to_model(self) -> Guest:
         """
         Convert a GuestEntity (DB Model) to a Guest (Pydantic Model).

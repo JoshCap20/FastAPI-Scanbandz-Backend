@@ -4,9 +4,10 @@ from sqlalchemy import ForeignKey, Integer, String, DateTime, Boolean, Numeric
 from sqlalchemy.orm import Mapped, mapped_column
 from typing import Type
 
-from ..settings.base import Base
+from .base import Base
 from ..models.ticket import Ticket
 from ..utils.encryption_service import EncryptionService
+
 
 class TicketEntity(Base):
     __tablename__ = "tickets"
@@ -25,28 +26,31 @@ class TicketEntity(Base):
 
     # Relationships
     event_id: Mapped[int] = mapped_column(Integer, ForeignKey("events.id"))
+    event: Mapped["EventEntity"] = mapped_column("EventEntity")
 
     # Authentication
     public_key: Mapped[str] = mapped_column(
         String,
         unique=True,
         index=True,
-        default=lambda: EncryptionService.generate_uuid()
+        default=lambda: EncryptionService.generate_uuid(),
     )
     private_key: Mapped[str] = mapped_column(
         String,
         unique=True,
         index=True,
-        default=lambda: EncryptionService.generate_code()
+        default=lambda: EncryptionService.generate_code(),
     )
 
     # Metadata
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
+    )
 
     # Methods
     @classmethod
-    def from_model(cls: Type['TicketEntity'], model: Ticket) -> 'TicketEntity':
+    def from_model(cls: Type["TicketEntity"], model: Ticket) -> "TicketEntity":
         """
         Convert a Ticket (Pydantic Model) to a TicketEntity (DB Model).
         """

@@ -3,8 +3,9 @@ from sqlalchemy import Integer, String, DateTime, Boolean
 from sqlalchemy.orm import Mapped, mapped_column
 from typing import Type
 
-from ..settings.base import Base
-from ..models.host import Host
+from .base import Base
+from ..models import Host, BaseHost
+
 
 class HostEntity(Base):
     __tablename__ = "hosts"
@@ -26,10 +27,28 @@ class HostEntity(Base):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     is_superuser: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
+    )
 
     @classmethod
-    def from_model(cls: Type['HostEntity'], model: Host) -> 'HostEntity':
+    def from_base_model(cls: Type["HostEntity"], model: BaseHost) -> "HostEntity":
+        """
+        Convert a BaseHost (Pydantic Model) to a HostEntity (DB Model).
+        """
+        return cls(
+            first_name=model.first_name,
+            last_name=model.last_name,
+            phone_number=model.phone_number,
+            email=model.email,
+            password=model.password,
+            stripe_id=None,
+            is_active=False,
+            is_superuser=False,
+        )
+
+    @classmethod
+    def from_model(cls: Type["HostEntity"], model: Host) -> "HostEntity":
         """
         Convert a Host (Pydantic Model) to a HostEntity (DB Model).
         """
@@ -44,7 +63,7 @@ class HostEntity(Base):
             is_active=model.is_active,
             is_superuser=model.is_superuser,
             created_at=model.created_at,
-            updated_at=model.updated_at
+            updated_at=model.updated_at,
         )
 
     def to_model(self) -> Host:
@@ -62,5 +81,5 @@ class HostEntity(Base):
             is_active=self.is_active,
             is_superuser=self.is_superuser,
             created_at=self.created_at,
-            updated_at=self.updated_at
+            updated_at=self.updated_at,
         )
