@@ -4,13 +4,13 @@
     "service": "httpd",
     "remoteUser": "vscode",
     "forwardPorts": [
-        8000
+        8001
     ],
-    "customizations": {
-        "vscode": {
-            "extensions": [
-                "ms-python.vscode-pylance"
-            ]
-        }
-    }
+    // "customizations": {
+    //     "vscode": {
+    //         "extensions": [
+    //             "ms-python.vscode-pylance"
+    //         ]
+    //     }
+    // }
 }
