@@ -2,23 +2,24 @@ from decimal import Decimal
 from pydantic import BaseModel, validator
 from datetime import datetime
 
+class TicketIdentity(BaseModel):
+    id: int
 
-class Ticket(BaseModel):
+class BaseTicket(BaseModel):
     # General
-    id: int | None = None
     name: str
     description: str | None = None
     price: Decimal
 
     # Settings
     max_quantity: int
-    used_quantity: int
     visibility: bool
     registration_active: bool
 
     # Relationships
     event_id: int
 
+class Ticket(BaseTicket, TicketIdentity):
     # Authentication
     public_key: str | None = None
     private_key: str | None = None
@@ -41,7 +42,6 @@ class TicketPublic(BaseModel):
     description: str | None = None
     price: Decimal
     max_quantity: int
-    used_quantity: int
     visibility: bool
     registration_active: bool
     event_id: int
@@ -57,7 +57,6 @@ class TicketPublic(BaseModel):
             description=ticket.description,
             price=ticket.price,
             max_quantity=ticket.max_quantity,
-            used_quantity=ticket.used_quantity,
             visibility=ticket.visibility,
             registration_active=ticket.registration_active,
             event_id=ticket.event_id,

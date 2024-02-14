@@ -20,7 +20,6 @@ class TicketEntity(Base):
 
     # Settings
     max_quantity: Mapped[int] = mapped_column(Integer)
-    used_quantity: Mapped[int] = mapped_column(Integer)
     visibility: Mapped[bool] = mapped_column(Boolean)
     registration_active: Mapped[bool] = mapped_column(Boolean)
 
@@ -63,7 +62,6 @@ class TicketEntity(Base):
             description=model.description,
             price=model.price,
             max_quantity=model.max_quantity,
-            used_quantity=model.used_quantity,
             visibility=model.visibility,
             registration_active=model.registration_active,
             event_id=model.event_id,
@@ -83,7 +81,6 @@ class TicketEntity(Base):
             description=self.description,
             price=self.price,
             max_quantity=self.max_quantity,
-            used_quantity=self.used_quantity,
             visibility=self.visibility,
             registration_active=self.registration_active,
             event_id=self.event_id,
