@@ -1,6 +1,10 @@
-from ..exceptions import TicketNotFoundException, HostPermissionError, EventNotFoundException
+from ..exceptions import (
+    TicketNotFoundException,
+    HostPermissionError,
+    EventNotFoundException,
+)
 from ..entities import TicketEntity, EventEntity
-from ..models import Ticket, Host
+from ..models import Ticket, Host, BaseTicket
 from ..database import db_session
 
 from typing import Sequence
@@ -40,10 +44,10 @@ class TicketService:
             TicketNotFoundException: If no ticket is found with the specified ID.
         """
         ticket_entity: TicketEntity | None = self._session.get(TicketEntity, id)
-        
+
         if not ticket_entity:
             raise TicketNotFoundException(f"Ticket not found with ID: {id}")
-        
+
         return ticket_entity.to_model()
 
     def get_by_public_key(self, key: str) -> Ticket:
@@ -61,10 +65,10 @@ class TicketService:
         """
         query = select(TicketEntity).where(TicketEntity.public_key == key)
         ticket_entity: TicketEntity | None = self._session.scalars(query).first()
-        
+
         if not ticket_entity:
             raise TicketNotFoundException(f"Ticket not found with public key: {key}")
-        
+
         return ticket_entity.to_model()
 
     def get_by_private_key(self, key: str) -> Ticket:
@@ -82,13 +86,13 @@ class TicketService:
         """
         query = select(TicketEntity).where(TicketEntity.private_key == key)
         ticket_entity: TicketEntity | None = self._session.scalars(query).first()
-        
+
         if not ticket_entity:
             raise TicketNotFoundException(f"Ticket not found with private key: {key}")
-        
+
         return ticket_entity.to_model()
 
-    def create(self, ticket: Ticket, host: Host) -> Ticket:
+    def create(self, ticket: BaseTicket, host: Host) -> Ticket:
         """
         Create a new ticket.
 
@@ -103,15 +107,17 @@ class TicketService:
             HostPermissionError: If the host does not have permission to create the ticket.
             EventNotFoundException: If the event with the specified ID from the ticket is not found.
         """
-        ticket_entity: TicketEntity = TicketEntity.from_model(ticket)
-        event_entity: EventEntity | None = self._session.get(EventEntity, ticket.event_id)
-        
+        ticket_entity: TicketEntity = TicketEntity.from_base_model(ticket)
+        event_entity: EventEntity | None = self._session.get(
+            EventEntity, ticket.event_id
+        )
+
         if not event_entity:
             raise EventNotFoundException(f"Event not found with ID: {ticket.event_id}")
-        
+
         if event_entity.host_id != host.id:
             raise HostPermissionError()
-        
+
         self._session.add(ticket_entity)
         self._session.commit()
         return ticket_entity.to_model()
@@ -129,12 +135,12 @@ class TicketService:
             HostPermissionError: If the host does not have permission to delete the ticket.
         """
         ticket_entity: TicketEntity | None = self._session.get(TicketEntity, id)
-        
+
         if not ticket_entity:
             raise TicketNotFoundException(f"Ticket not found with ID: {id}")
-        
+
         if ticket_entity.event.host_id != host.id:
             raise HostPermissionError()
-        
+
         self._session.delete(ticket_entity)
         self._session.commit()

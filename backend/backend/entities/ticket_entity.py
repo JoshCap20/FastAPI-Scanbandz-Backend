@@ -5,7 +5,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from typing import Type
 
 from .base import Base
-from ..models.ticket import Ticket
+from ..models import Ticket, BaseTicket
 from ..utils.encryption_service import EncryptionService
 
 
@@ -49,6 +49,21 @@ class TicketEntity(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
     )
+
+    @classmethod
+    def from_base_model(cls: Type["TicketEntity"], model: BaseTicket) -> "TicketEntity":
+        """
+        Convert a BaseTicket (Pydantic Model) to a TicketEntity (DB Model).
+        """
+        return cls(
+            name=model.name,
+            description=model.description,
+            price=model.price,
+            max_quantity=model.max_quantity,
+            visibility=model.visibility,
+            registration_active=model.registration_active,
+            event_id=model.event_id,
+        )
 
     # Methods
     @classmethod

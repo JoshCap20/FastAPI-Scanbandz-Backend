@@ -6,13 +6,18 @@ from .authentication import registered_user
 from ..models import Ticket, BaseTicket, Host
 from ..services import TicketService
 from ..utils.dev_only import dev_only
-from ..exceptions import EventNotFoundException, HostPermissionError
+from ..exceptions import (
+    EventNotFoundException,
+    HostPermissionError,
+    HostNotFoundException,
+)
 
 api = APIRouter(prefix="/api/tickets")
 openapi_tags = {
     "name": "Tickets",
     "description": "Ticket management.",
 }
+
 
 @api.post("/new", tags=["Tickets"])
 def new_ticket(
@@ -29,4 +34,4 @@ def new_ticket(
     except EventNotFoundException:
         raise HTTPException(status_code=404, detail="Event not found")
     except HostPermissionError:
-        raise HTTPException(status_code=403, detail="Host does not have permission to create ticket")
+        raise HTTPException(status_code=403, detail="Invalid permissions")
