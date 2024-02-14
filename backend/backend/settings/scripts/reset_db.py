@@ -1,5 +1,5 @@
 from ... import database
-from ..base import Base
+from ...entities.base import Base
 
 # Reset Tables
 Base.metadata.drop_all(database.engine)
