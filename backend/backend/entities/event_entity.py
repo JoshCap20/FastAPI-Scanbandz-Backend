@@ -1,8 +1,8 @@
 """Definitions of SQLAlchemy table-backed object mappings called entities."""
 
-from typing import List, Type
+from typing import Type
 from datetime import datetime
-from sqlalchemy import Integer, String, DateTime
+from sqlalchemy import ForeignKey, Integer, String, DateTime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .host_entity import HostEntity
@@ -24,9 +24,14 @@ class EventEntity(Base):
     end: Mapped[datetime] = mapped_column(DateTime)
 
     # Relationships
-    tickets: Mapped[List["TicketEntity"]] = relationship(
+    tickets: Mapped[list["TicketEntity"]] = relationship(
         "TicketEntity", back_populates="event"
     )
+    guests: Mapped[list["GuestEntity"]] = relationship(
+        "GuestEntity", back_populates="event"
+    )
+
+    host_id: Mapped[int] = mapped_column(Integer, ForeignKey("hosts.id"))
     host: Mapped["HostEntity"] = relationship("HostEntity")
 
     # Authentication

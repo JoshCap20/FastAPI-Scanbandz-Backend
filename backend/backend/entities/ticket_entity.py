@@ -1,7 +1,7 @@
 from datetime import datetime
 from decimal import Decimal
 from sqlalchemy import ForeignKey, Integer, String, DateTime, Boolean, Numeric
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from typing import Type
 
 from .base import Base
@@ -26,7 +26,10 @@ class TicketEntity(Base):
 
     # Relationships
     event_id: Mapped[int] = mapped_column(Integer, ForeignKey("events.id"))
-    event: Mapped["EventEntity"] = mapped_column("EventEntity")
+    event: Mapped["EventEntity"] = relationship("EventEntity", back_populates="tickets")
+    guests: Mapped[list["GuestEntity"]] = relationship(
+        "GuestEntity", back_populates="ticket"
+    )
 
     # Authentication
     public_key: Mapped[str] = mapped_column(

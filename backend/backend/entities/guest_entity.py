@@ -4,6 +4,7 @@ from typing import Type
 from datetime import datetime
 from sqlalchemy import Integer, String, DateTime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.sql.schema import ForeignKey
 
 from .ticket_entity import TicketEntity
 from .event_entity import EventEntity
@@ -29,9 +30,14 @@ class GuestEntity(Base):
     used_quantity: Mapped[int] = mapped_column(Integer)
     scan_timestamp: Mapped[datetime] = mapped_column(DateTime)
 
+    event_id: Mapped[int] = mapped_column(Integer, ForeignKey("events.id"))
+    ticket_id: Mapped[int] = mapped_column(Integer, ForeignKey("tickets.id"))
+
     # Relationships
-    event: Mapped["EventEntity"] = relationship("EventEntity")
-    ticket: Mapped["TicketEntity"] = relationship("TicketEntity")
+    event: Mapped["EventEntity"] = relationship("EventEntity", back_populates="guests")
+    ticket: Mapped["TicketEntity"] = relationship(
+        "TicketEntity", back_populates="guests"
+    )
 
     # Authentication
     public_key: Mapped[str] = mapped_column(

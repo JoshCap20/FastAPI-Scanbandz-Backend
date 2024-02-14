@@ -1,6 +1,6 @@
 from datetime import datetime
 from sqlalchemy import Integer, String, DateTime, Boolean
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from typing import Type
 
 from .base import Base
@@ -29,6 +29,10 @@ class HostEntity(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
+    )
+
+    events: Mapped[list["EventEntity"]] = relationship(
+        "EventEntity", back_populates="host"
     )
 
     @classmethod
