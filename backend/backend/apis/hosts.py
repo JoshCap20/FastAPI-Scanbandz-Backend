@@ -3,7 +3,6 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.exc import IntegrityError
 
 from ..models import BaseHost, Host
-from ..entities import HostEntity
 from ..services.host_service import HostService
 from ..utils.dev_only import dev_only
 

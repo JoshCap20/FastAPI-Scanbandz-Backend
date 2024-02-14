@@ -1,10 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
-from sqlalchemy.exc import IntegrityError
 
 from .authentication import registered_user
 from ..models import Event, BaseEvent, Host, EventPublic
-from ..entities import HostEntity
 from ..services.event_service import EventService
 from ..utils.dev_only import dev_only
 from ..exceptions import EventNotFoundException
