@@ -8,7 +8,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from .host_entity import HostEntity
 from .ticket_entity import TicketEntity
 from .base import Base
-from ..models.event import Event, BaseEvent
+from ..models import Event, BaseEvent
 from ..utils.encryption_service import EncryptionService
 
 
@@ -56,7 +56,9 @@ class EventEntity(Base):
 
     # Methods
     @classmethod
-    def from_base_model(cls: Type["EventEntity"], model: BaseEvent, host_id: int) -> "EventEntity":
+    def from_base_model(
+        cls: Type["EventEntity"], model: BaseEvent, host_id: int
+    ) -> "EventEntity":
         """
         Convert a BaseEvent (Pydantic Model) to a EventEntity (DB Model).
         """
@@ -68,7 +70,7 @@ class EventEntity(Base):
             end=model.end,
             host_id=host_id,
         )
-        
+
     @classmethod
     def from_model(cls: Type["EventEntity"], model: Event) -> "EventEntity":
         """
@@ -81,7 +83,11 @@ class EventEntity(Base):
             location=model.location,
             start=model.start,
             end=model.end,
-            tickets=[TicketEntity.from_model(ticket) for ticket in model.tickets],
+            tickets=(
+                [TicketEntity.from_model(ticket) for ticket in model.tickets]
+                if model.tickets
+                else None
+            ),
             host=HostEntity.from_model(model.host),
             public_key=model.public_key,
             private_key=model.private_key,
@@ -100,7 +106,9 @@ class EventEntity(Base):
             location=self.location,
             start=self.start,
             end=self.end,
-            tickets=[ticket.to_model() for ticket in self.tickets],
+            tickets=(
+                [ticket.to_model() for ticket in self.tickets] if self.tickets else None
+            ),
             host=self.host.to_model(),
             public_key=self.public_key,
             private_key=self.private_key,

@@ -16,10 +16,10 @@ openapi_tags = {
 
 @api.post("/register", tags=["Hosts"])
 def register_host(
-    host: BaseHost, host_service: HostService = Depends()
+    new_host: BaseHost, host_service: HostService = Depends()
 ) -> JSONResponse:
     try:
-        host: Host = host_service.create(host)
+        host: Host = host_service.create(new_host)
     except IntegrityError as e:
         detail = "An account with the provided email or phone number already exists."
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=detail)

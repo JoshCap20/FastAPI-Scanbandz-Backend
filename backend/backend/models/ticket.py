@@ -2,6 +2,7 @@ from decimal import Decimal
 from pydantic import BaseModel, validator
 from datetime import datetime
 
+
 class Ticket(BaseModel):
     # General
     id: int | None = None
@@ -17,7 +18,7 @@ class Ticket(BaseModel):
 
     # Relationships
     event_id: int
-    
+
     # Authentication
     public_key: str | None = None
     private_key: str | None = None
@@ -27,7 +28,7 @@ class Ticket(BaseModel):
     updated_at: datetime | None = None
 
     @validator("price", pre=True, always=True)
-    def validate_price(cls, price):
+    def validate_price(cls, price: Decimal) -> Decimal:
         if price < 0:
             raise ValueError("Price cannot be negative")
         return price
@@ -44,7 +45,7 @@ class TicketPublic(BaseModel):
     visibility: bool
     registration_active: bool
     event_id: int
-    
+
     @classmethod
     def from_ticket(cls, ticket: Ticket) -> "TicketPublic":
         """
