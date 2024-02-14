@@ -1,8 +1,9 @@
-from ..exceptions.guest_exceptions import GuestNotFoundException
+from ..exceptions import GuestNotFoundException, HostPermissionError
 from ..database import db_session
 from ..entities.guest_entity import GuestEntity
-from ..models.guest import Guest
+from ..models import Guest, Host
 
+from typing import Sequence
 from sqlalchemy.orm import Session
 from fastapi import Depends
 from sqlalchemy import select
@@ -16,36 +17,90 @@ class GuestService:
         self._session = session
 
     def all(self) -> list[Guest]:
+        """
+        Retrieves all guest entities from the database and returns them as a list of Guest models.
+
+        Returns:
+            list[Guest]: A list of Guest models representing the guest entities.
+        """
         query = select(GuestEntity)
-        entities = self._session.scalars(query).all()
+        entities: Sequence[GuestEntity] = self._session.scalars(query).all()
         return [entity.to_model() for entity in entities]
 
     def get_by_id(self, id: int) -> Guest:
-        guest_entity = self._session.get(GuestEntity, id)
-        if guest_entity:
-            return guest_entity.to_model()
-        else:
+        """
+        Retrieves a guest by their ID.
+
+        Args:
+            id (int): The ID of the guest to retrieve.
+
+        Returns:
+            Guest: The guest object.
+
+        Raises:
+            GuestNotFoundException: If no guest is found with the specified ID.
+        """
+        guest_entity: GuestEntity | None = self._session.get(GuestEntity, id)
+
+        if not guest_entity:
             raise GuestNotFoundException(f"No guest found with ID: {id}")
-        
+
+        return guest_entity.to_model()
+
     def get_by_public_key(self, key: str) -> Guest:
+        """
+        Retrieves a guest by their public key.
+
+        Args:
+            key (str): The public key of the guest.
+
+        Returns:
+            Guest: The guest object corresponding to the public key.
+
+        Raises:
+            GuestNotFoundException: If no guest is found with the provided public key.
+        """
         query = select(GuestEntity).where(GuestEntity.public_key == key)
-        guest_entity = self._session.scalars(query).first()
-        if guest_entity:
-            return guest_entity.to_model()
-        else:
+        guest_entity: GuestEntity | None = self._session.scalars(query).first()
+
+        if not guest_entity:
             raise GuestNotFoundException(f"No guest found with public key: {key}")
 
+        return guest_entity.to_model()
+
     def create(self, guest: Guest) -> Guest:
-        guest_entity = GuestEntity.from_model(guest)
+        """
+        Creates a new guest in the database.
+
+        Args:
+            guest (Guest): The guest object to be created.
+
+        Returns:
+            Guest: The created guest object.
+        """
+        guest_entity: GuestEntity = GuestEntity.from_model(guest)
         self._session.add(guest_entity)
         self._session.commit()
         return guest_entity.to_model()
 
-    def delete(self, id: int) -> None:
-        guest_entity = self._session.get(GuestEntity, id)
-        if guest_entity:
-            self._session.delete(guest_entity)
-            self._session.commit()
-        else:
+    def delete(self, id: int, host: Host) -> None:
+        """
+        Delete a guest by ID if the host has permission.
+
+        Args:
+            id (int): The ID of the guest to delete.
+            host (Host): The host object representing the host.
+
+        Raises:
+            GuestNotFoundException: If no guest is found with the given ID.
+            HostPermissionError: If the host does not have permission to delete the guest.
+        """
+        guest_entity: GuestEntity | None = self._session.get(GuestEntity, id)
+
+        if not guest_entity:
             raise GuestNotFoundException(f"No guest found with ID: {id}")
-        
+        if guest_entity.event.host_id != host.id:
+            raise HostPermissionError()
+
+        self._session.delete(guest_entity)
+        self._session.commit()
