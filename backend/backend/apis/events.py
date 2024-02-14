@@ -2,10 +2,12 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
 from sqlalchemy.exc import IntegrityError
 
-from ..models import Event, BaseEvent
+from .authentication import registered_user
+from ..models import Event, BaseEvent, Host
 from ..entities import HostEntity
 from ..services.event_service import EventService
 from ..utils.dev_only import dev_only
+from ..exceptions import EventNotFoundException
 
 api = APIRouter(prefix="/api/events")
 openapi_tags = {
@@ -16,13 +18,21 @@ openapi_tags = {
 
 @api.post("/new", tags=["Events"])
 def new_event(
-    event: BaseEvent, event_service: EventService = Depends()
+    event: BaseEvent, event_service: EventService = Depends(), current_user: Host = Depends(registered_user)
 ) -> JSONResponse:
-    event: Event = event_service.create(event)
+    event: Event = event_service.create(event, current_user)
     return JSONResponse(
         status_code=status.HTTP_201_CREATED,
         content={"message": "Event created successfully."},
     )
+    
+@api.get("/get/{event_id}", response_model=Event, tags=["Events"])
+def get_event(event_id: int, event_service: EventService = Depends()) -> Event:
+    try:
+        event: Event = event_service.get_by_id(event_id)
+        return event
+    except EventNotFoundException:
+        raise HTTPException(status_code=404, detail="Event not found")
 
 
 @api.get("/list", response_model=list[Event], tags=["Events"])
