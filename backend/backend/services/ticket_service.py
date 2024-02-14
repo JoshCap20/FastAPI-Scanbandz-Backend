@@ -101,6 +101,7 @@ class TicketService:
 
         Raises:
             HostPermissionError: If the host does not have permission to create the ticket.
+            EventNotFoundException: If the event with the specified ID from the ticket is not found.
         """
         ticket_entity: TicketEntity = TicketEntity.from_model(ticket)
         event_entity: EventEntity | None = self._session.get(EventEntity, ticket.event_id)
