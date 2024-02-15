@@ -21,11 +21,7 @@ class BaseGuest(BaseModel):
     # Ticket
     quantity: int = 1
     used_quantity: int = 0
-    scan_timestamp: datetime | None = None
 
-    # Metadata
-    created_at: datetime | None = None
-    updated_at: datetime | None = None
 
     @validator("phone_number", pre=True, always=True)
     def validate_phone_number(cls, phone_number: str):
@@ -48,6 +44,11 @@ class BaseGuest(BaseModel):
 
 
 class Guest(BaseGuest, GuestIdentity):
+    # Metadata
+    scan_timestamp: list[datetime] = []
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+    
     # Relationships
     event: Event
     ticket: Ticket

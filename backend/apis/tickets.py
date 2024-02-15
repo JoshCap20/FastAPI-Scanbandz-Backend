@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
-from sqlalchemy.exc import IntegrityError
 
 from .authentication import registered_user
 from ..models import Ticket, BaseTicket, Host

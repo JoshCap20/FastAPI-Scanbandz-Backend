@@ -9,7 +9,7 @@ from sqlalchemy.sql.schema import ForeignKey
 from .ticket_entity import TicketEntity
 from .event_entity import EventEntity
 from .base import Base
-from ..models import Guest
+from ..models import Guest, BaseGuest
 from ..utils.encryption_service import EncryptionService
 
 
@@ -60,6 +60,23 @@ class GuestEntity(Base):
     )
 
     # Methods
+    @classmethod
+    def from_base_model(
+        cls: Type["GuestEntity"], base_model: BaseGuest, ticket_id: int, event_id: int
+    ) -> "GuestEntity":
+        """
+        Convert a BaseGuest (Pydantic Model) to a GuestEntity (DB Model).
+        """
+        return cls(
+            first_name=base_model.first_name,
+            last_name=base_model.last_name,
+            phone_number=base_model.phone_number,
+            email=base_model.email,
+            quantity=base_model.quantity,
+            used_quantity=base_model.used_quantity,
+            event_id=event_id,
+            ticket_id=ticket_id,
+        )
 
     @classmethod
     def from_model(cls: Type["GuestEntity"], model: Guest) -> "GuestEntity":

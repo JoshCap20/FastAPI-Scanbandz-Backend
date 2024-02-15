@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.exc import IntegrityError
 
 from ..models import BaseHost, Host
-from ..services.host_service import HostService
+from ..services import HostService
 from ..utils.dev_only import dev_only
 
 api = APIRouter(prefix="/api/hosts")
