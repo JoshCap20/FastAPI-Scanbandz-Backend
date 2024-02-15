@@ -14,7 +14,7 @@ from ..models import Guest, Host, BaseGuest, Ticket, Event
 from typing import Sequence
 from sqlalchemy.orm import Session
 from fastapi import Depends
-from sqlalchemy import select
+from sqlalchemy import select, func
 
 
 class GuestService:
@@ -106,6 +106,17 @@ class GuestService:
             raise IllegalGuestOperationException()
         if ticket.price > 0:
             raise IllegalGuestOperationException()
+        if not ticket.registration_active:
+            raise IllegalGuestOperationException("Ticket registration is disabled.")
+
+        if ticket.max_quantity:
+            guest_count_query = select(func.count()).where(
+                GuestEntity.ticket_id == ticket_id
+            )
+            total_guests = self._session.execute(guest_count_query).scalar_one()
+
+            if total_guests >= ticket.max_quantity:
+                raise IllegalGuestOperationException("Ticket has reached max quantity.")
 
         entity: GuestEntity = GuestEntity.from_base_model(
             base_model=guest, ticket_id=ticket_id, event_id=event_id
