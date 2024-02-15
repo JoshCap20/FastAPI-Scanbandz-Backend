@@ -1,6 +1,6 @@
 from .communication_exceptions import EmailFailureException, SMSFailureException
 from .event_exceptions import EventNotFoundException
-from .guest_exceptions import GuestNotFoundException
+from .guest_exceptions import GuestNotFoundException, IllegalGuestOperationException
 from .host_exceptions import (
     HostNotFoundException,
     HostPermissionError,
