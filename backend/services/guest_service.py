@@ -1,3 +1,5 @@
+from backend.entities.event_entity import EventEntity
+from backend.entities.ticket_entity import TicketEntity
 from ..exceptions import (
     GuestNotFoundException,
     HostPermissionError,
@@ -92,8 +94,8 @@ class GuestService:
             EventNotFoundException: If the event is not found.
             IllegalGuestOperationException: If the ticket has a price or the event is not the same as the ticket's event.
         """
-        ticket: Ticket | None = self._session.get(Ticket, ticket_id)
-        event: Event | None = self._session.get(Event, event_id)
+        ticket: TicketEntity | None = self._session.get(TicketEntity, ticket_id)
+        event: EventEntity | None = self._session.get(EventEntity, event_id)
 
         if not ticket:
             raise TicketNotFoundException()
