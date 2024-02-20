@@ -30,6 +30,7 @@ class StripePaymentService:
         self.ticket_service = ticket_service
         self.event_service = event_service
 
+    # TODO: Convert metadata to a model for validation
     def create_checkout_session(
         self, ticket_id: int, quantity: int, metadata: dict = {}
     ) -> stripe.checkout.Session:
@@ -48,6 +49,7 @@ class StripePaymentService:
             TicketNotFoundException: If the ticket with the given ID does not exist.
             TicketRegistrationClosedException: If the ticket registration is closed.
             HostStripeAccountNotFoundException: If the host does not have a Stripe account.
+            StripeCheckoutSessionException: If there is an error creating the checkout session.
         """
 
         ticket: Ticket = self.ticket_service.get_by_id(ticket_id)
