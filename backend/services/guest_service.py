@@ -1,27 +1,34 @@
-from backend.entities.event_entity import EventEntity
-from backend.entities.ticket_entity import TicketEntity
+from ..entities import EventEntity, TicketEntity, GuestEntity, HostEntity
 from ..exceptions import (
     GuestNotFoundException,
     HostPermissionError,
     TicketNotFoundException,
     EventNotFoundException,
     IllegalGuestOperationException,
+    TicketRegistrationClosedException,
+    TicketRegistrationFullException,
 )
 from ..database import db_session
-from ..entities import GuestEntity
 from ..models import Guest, Host, BaseGuest, Ticket, Event
+from .stripe_payment_service import StripePaymentService
 
 from typing import Sequence
 from sqlalchemy.orm import Session
 from fastapi import Depends
-from sqlalchemy import select
+from sqlalchemy import select, func
 
 
 class GuestService:
     _session: Session
+    payment_service: StripePaymentService
 
-    def __init__(self, session: Session = Depends(db_session)):
+    def __init__(
+        self,
+        session: Session = Depends(db_session),
+        stripe_payment_service: StripePaymentService = Depends(StripePaymentService),
+    ):
         self._session = session
+        self.payment_service = stripe_payment_service
 
     def all(self) -> list[Guest]:
         """
@@ -75,11 +82,12 @@ class GuestService:
 
         return guest_entity.to_model()
 
-    def create_free_guest(
+    def create_guest(
         self, guest: BaseGuest, ticket_id: int, event_id: int
-    ) -> Guest:
+    ) -> Guest | str:
         """
-        Creates a guest for a free ticket and event.
+        Creates a guest for a given ticket and event if free
+        or creates a checkout session for a paid ticket.
 
         Args:
             guest (BaseGuest): The guest information.
@@ -87,28 +95,61 @@ class GuestService:
             event_id (int): The ID of the event.
 
         Returns:
-            Guest: The created guest.
+            Guest | str: The created guest object or a checkout URL
 
         Raises:
-            TicketNotFoundException: If the ticket is not found.
-            EventNotFoundException: If the event is not found.
-            IllegalGuestOperationException: If the ticket has a price or the event is not the same as the ticket's event.
+            TicketNotFoundException: If the ticket with the given ID is not found.
+            EventNotFoundException: If the event with the given ID is not found.
+            IllegalGuestOperationException: If the ticket does not belong to the event.
+            TicketRegistrationClosedException: If the ticket registration is closed.
+            TicketRegistrationFullException: If the ticket registration is full.
         """
-        ticket: TicketEntity | None = self._session.get(TicketEntity, ticket_id)
-        event: EventEntity | None = self._session.get(EventEntity, event_id)
+        ticket_entity: TicketEntity | None = self._session.get(TicketEntity, ticket_id)
+        event_entity: EventEntity | None = self._session.get(EventEntity, event_id)
 
-        if not ticket:
+        if not ticket_entity:
             raise TicketNotFoundException()
-        if not event:
+        if not event_entity:
             raise EventNotFoundException(event_id)
-
-        if ticket.event_id != event.id:
+        if ticket_entity.event_id != event_entity.id:
             raise IllegalGuestOperationException()
-        if ticket.price > 0:
-            raise IllegalGuestOperationException()
+        if not ticket_entity.registration_active:
+            raise TicketRegistrationClosedException()
 
+        if ticket_entity.max_quantity:
+            guest_count_query = select(func.count()).where(
+                GuestEntity.ticket_id == ticket_entity.id
+            )
+            total_guests = self._session.execute(guest_count_query).scalar_one()
+
+            if total_guests >= ticket_entity.max_quantity:
+                raise TicketRegistrationFullException()
+
+        ticket: Ticket = ticket_entity.to_model()
+        event: Event = event_entity.to_model()
+
+        if ticket.price <= 0:
+            return self.create_guest_from_base(guest=guest, ticket=ticket, event=event)
+        return self.payment_service.create_checkout_session(
+            guest=guest, ticket=ticket, event=event
+        )
+
+    def create_guest_from_base(
+        self, guest: BaseGuest, ticket: Ticket, event: Event
+    ) -> Guest:
+        """
+        Creates a new guest from a base guest, ticket, and event.
+
+        Args:
+            guest (BaseGuest): The base guest object.
+            ticket (Ticket): The ticket object.
+            event (Event): The event object.
+
+        Returns:
+            Guest: The created guest object.
+        """
         entity: GuestEntity = GuestEntity.from_base_model(
-            base_model=guest, ticket_id=ticket_id, event_id=event_id
+            base_model=guest, ticket_id=ticket.id, event_id=event.id
         )
         self._session.add(entity)
         self._session.commit()

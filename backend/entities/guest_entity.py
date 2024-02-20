@@ -28,7 +28,7 @@ class GuestEntity(Base):
     # Ticket
     quantity: Mapped[int] = mapped_column(Integer)
     used_quantity: Mapped[int] = mapped_column(Integer)
-    scan_timestamp: Mapped[datetime] = mapped_column(DateTime)
+    scan_timestamp: Mapped[datetime] = mapped_column(DateTime, nullable=True)
 
     event_id: Mapped[int] = mapped_column(Integer, ForeignKey("events.id"))
     ticket_id: Mapped[int] = mapped_column(Integer, ForeignKey("tickets.id"))

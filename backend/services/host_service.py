@@ -44,10 +44,10 @@ class HostService:
             HostNotFoundException: If no host is found with the specified ID.
         """
         host_entity: HostEntity | None = self._session.get(HostEntity, id)
-        
+
         if not host_entity:
             raise HostNotFoundException(f"Host not found with ID: {id}")
-        
+
         return host_entity.to_model()
 
     def get_by_phone_number(self, key: str) -> Host:
@@ -65,10 +65,10 @@ class HostService:
         """
         query = select(HostEntity).where(HostEntity.phone_number == key)
         host_entity: HostEntity | None = self._session.scalars(query).first()
-        
+
         if not host_entity:
             raise HostNotFoundException(f"Host not found with phone number: {key}")
-        
+
         return host_entity.to_model()
 
     def get_by_email(self, key: str) -> Host:
@@ -104,9 +104,14 @@ class HostService:
         """
         host.password = self._hash_password(host.password)
         host_entity: HostEntity = HostEntity.from_base_model(host)
-        self._session.add(host_entity)
-        self._session.commit()
-        return host_entity.to_model()
+        # TODO: Add error handling for duplicate email or phone number
+        try:
+            self._session.add(host_entity)
+            self._session.commit()
+            return host_entity.to_model()
+        except:
+            self._session.rollback()
+            raise Exception("An error occurred while creating the host.")
 
     @staticmethod
     def _hash_password(password: str) -> str:
@@ -161,3 +166,40 @@ class HostService:
         if user and HostService._verify_password(credentials.password, user.password):
             return user.id, user.phone_number
         raise InvalidCredentialsError()
+
+    ### TESTING ONLY
+    def set_stripe_id(self, host_id: int, stripe_id: str) -> Host:
+        """
+        Set the Stripe ID for a host.
+
+        Args:
+            host_id (int): The ID of the host.
+            stripe_id (str): The Stripe ID to set.
+
+        Returns:
+            Host: The updated host object.
+        """
+        host: HostEntity | None = self._session.get(HostEntity, host_id)
+        if not host:
+            raise HostNotFoundException(f"No host found with ID: {host_id}")
+        host.stripe_id = stripe_id
+        self._session.commit()
+        return host.to_model()
+
+    def reset_password(self, host_id: int, new_password: str) -> Host:
+        """
+        Reset the password for a host.
+
+        Args:
+            host_id (int): The ID of the host.
+            new_password (str): The new password.
+
+        Returns:
+            Host: The updated host object.
+        """
+        host: HostEntity | None = self._session.get(HostEntity, host_id)
+        if not host:
+            raise HostNotFoundException(f"No host found with ID: {host_id}")
+        host.password = self._hash_password(new_password)
+        self._session.commit()
+        return host.to_model()
