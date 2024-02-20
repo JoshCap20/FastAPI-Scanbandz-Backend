@@ -14,6 +14,7 @@ from ..exceptions import (
     TicketRegistrationClosedException,
     HostStripeAccountNotFoundException,
     TicketRegistrationFullException,
+    StripeCheckoutSessionException,
 )
 
 api = APIRouter(prefix="/api/guests")
@@ -72,3 +73,7 @@ def create_guest(
         raise HTTPException(status_code=400, detail=str(e))
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+    except StripeCheckoutSessionException:
+        raise HTTPException(
+            status_code=500, detail="Error creating Stripe checkout session"
+        )

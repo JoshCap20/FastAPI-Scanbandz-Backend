@@ -14,4 +14,5 @@ from .ticket_exceptions import (
 from .stripe_exceptions import (
     StripeCheckoutSessionException,
     HostStripeAccountNotFoundException,
+    HostStripeAccountCreationException,
 )

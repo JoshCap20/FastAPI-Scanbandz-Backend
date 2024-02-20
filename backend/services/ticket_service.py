@@ -118,9 +118,13 @@ class TicketService:
         if event_entity.host_id != host.id:
             raise HostPermissionError()
 
-        self._session.add(ticket_entity)
-        self._session.commit()
-        return ticket_entity.to_model()
+        try:
+            self._session.add(ticket_entity)
+            self._session.commit()
+            return ticket_entity.to_model()
+        except:
+            self._session.rollback()
+            raise Exception("Error creating ticket")
 
     def update(self, id: int, ticket: BaseTicket, host: Host) -> Ticket:
         """
@@ -152,8 +156,12 @@ class TicketService:
         ticket_entity.max_quantity = ticket.max_quantity
         ticket_entity.visibility = ticket.visibility
         ticket_entity.registration_active = ticket.registration_active
-        self._session.commit()
-        return ticket_entity.to_model()
+        try:
+            self._session.commit()
+            return ticket_entity.to_model()
+        except:
+            self._session.rollback()
+            raise Exception("Error updating ticket")
 
     def delete(self, id: int, host: Host) -> None:
         """
