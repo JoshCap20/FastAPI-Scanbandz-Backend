@@ -9,6 +9,7 @@ from .host_exceptions import (
 from .ticket_exceptions import (
     TicketNotFoundException,
     TicketRegistrationClosedException,
+    TicketRegistrationFullException,
 )
 from .stripe_exceptions import (
     StripeCheckoutSessionException,

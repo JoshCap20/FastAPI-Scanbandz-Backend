@@ -6,3 +6,8 @@ class TicketNotFoundException(Exception):
 class TicketRegistrationClosedException(Exception):
     def __init__(self, msg: str = "Ticket registration is closed"):
         super().__init__(msg)
+
+
+class TicketRegistrationFullException(Exception):
+    def __init__(self, msg: str = "Ticket registration is full"):
+        super().__init__(msg)

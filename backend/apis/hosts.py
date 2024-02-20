@@ -28,7 +28,35 @@ def register_host(
     )
 
 
-@api.get("/list", response_model=list[Host], tags=["Hosts"])
+@api.get("/list", response_model=list[Host], tags=["Dev"])
 @dev_only
 def list_hosts(host_service: HostService = Depends()) -> list[Host]:
     return host_service.all()
+
+
+@api.post("/set-stripe-id", tags=["Dev"])
+@dev_only
+def set_stripe_id(
+    host_id: int,
+    stripe_id: str,
+    host_service: HostService = Depends(),
+) -> JSONResponse:
+    host_service.set_stripe_id(host_id, stripe_id)
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={"message": "Stripe account ID set successfully."},
+    )
+
+
+@api.post("/reset-password", tags=["Dev"])
+@dev_only
+def reset_password(
+    host_id: int,
+    new_password: str,
+    host_service: HostService = Depends(),
+) -> JSONResponse:
+    host_service.reset_password(host_id, new_password)
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={"message": "Password reset successfully."},
+    )

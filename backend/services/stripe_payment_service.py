@@ -4,12 +4,9 @@ Stripe payment service for creating checkout sessions.
 
 import stripe
 from decimal import Decimal
-from fastapi import Depends
 
 from ..settings.config import STRIPE_SECRET_KEY
-from ..models import Ticket, Host, Event
-from .ticket_service import TicketService
-from .event_service import EventService
+from ..models import Ticket, Host, Event, BaseGuest
 from ..exceptions import (
     TicketRegistrationClosedException,
     StripeCheckoutSessionException,
@@ -18,22 +15,13 @@ from ..exceptions import (
 
 
 class StripePaymentService:
-    ticket_service: TicketService
-    event_service: EventService
-
-    def __init__(
-        self,
-        ticket_service: TicketService = Depends(TicketService),
-        event_service: EventService = Depends(EventService),
-    ):
+    def __init__(self):
         stripe.api_key = STRIPE_SECRET_KEY
-        self.ticket_service = ticket_service
-        self.event_service = event_service
 
     # TODO: Convert metadata to a model for validation
     def create_checkout_session(
-        self, ticket_id: int, quantity: int, metadata: dict = {}
-    ) -> stripe.checkout.Session:
+        self, guest: BaseGuest, ticket: Ticket, event: Event
+    ) -> str:
         """
         Creates a checkout session for purchasing tickets.
 
@@ -43,7 +31,7 @@ class StripePaymentService:
             metadata (dict, optional): Additional metadata for the checkout session. Defaults to {}.
 
         Returns:
-            stripe.checkout.Session: The created checkout session.
+            str: The created checkout session url.
 
         Raises:
             TicketNotFoundException: If the ticket with the given ID does not exist.
@@ -51,27 +39,31 @@ class StripePaymentService:
             HostStripeAccountNotFoundException: If the host does not have a Stripe account.
             StripeCheckoutSessionException: If there is an error creating the checkout session.
         """
-
-        ticket: Ticket = self.ticket_service.get_by_id(ticket_id)
-        event: Event = self.event_service.get_by_id(ticket.event_id)
         host: Host = event.host
 
-        if not ticket.registration_active:
-            raise TicketRegistrationClosedException()
         if host.stripe_id is None:
             raise HostStripeAccountNotFoundException()
 
-        SUCCESS_URL: str = self._get_success_link(event, ticket, quantity)
+        SUCCESS_URL: str = self._get_success_link(event, ticket, guest.quantity)
         CANCEL_URL: str = self._get_cancel_link(event)
 
         return self._get_stripe_checkout(
             ticket=ticket,
             event=event,
             host_stripe_id=host.stripe_id,
-            quantity=quantity,
+            quantity=guest.quantity,
             success_url=SUCCESS_URL,
             cancel_url=CANCEL_URL,
-            metadata=metadata,
+            metadata={
+                "guest_first_name": guest.first_name,
+                "guest_last_name": guest.last_name,
+                "guest_email": guest.email,
+                "guest_phone_number": guest.phone_number,
+                "event_id": event.id,
+                "ticket_id": ticket.id,
+                "quantity": guest.quantity,
+                "host_id": host.id,
+            },
         )
 
     def _get_success_link(self, event: Event, ticket: Ticket, quantity: int) -> str:
@@ -109,7 +101,7 @@ class StripePaymentService:
         success_url: str,
         cancel_url: str,
         metadata: dict,
-    ) -> stripe.checkout.Session:
+    ) -> str:
         """
         Creates a Stripe checkout session for a given ticket and event.
 
@@ -123,7 +115,7 @@ class StripePaymentService:
             metadata (dict): Additional metadata to include in the checkout session.
 
         Returns:
-            stripe.checkout.Session: The created Stripe checkout session.
+            str: The created Stripe checkout session url.
 
         Raises:
             StripeCheckoutSessionException: If there is an error creating the checkout session.
@@ -167,8 +159,7 @@ class StripePaymentService:
                     },
                 },
             )
-
-            return checkout_session
+            return checkout_session.url
         except stripe.StripeError as e:
             raise StripeCheckoutSessionException(str(e))
 
