@@ -45,8 +45,8 @@ class StripeHostService:
         """
         host = self.host_service.get_by_id(host_id)
 
-        # if host.stripe_id is not None:
-        #     return host.stripe_id
+        if host.stripe_id is not None:
+            return host.stripe_id
 
         try:
             account = stripe.Account.create(
@@ -171,8 +171,11 @@ class StripeHostService:
     def get_account_link(self, host_id: int) -> str:
         host = self.host_service.get_by_id(host_id)
 
-        if not host.stripe_id or not self.is_account_enabled(host_id):
+        if not host.stripe_id:
             raise HostStripeAccountNotFoundException()
+
+        if not self.is_account_enabled(host_id):
+            return self.get_onboarding_link(host_id)
 
         account = stripe.Account.create_login_link(host.stripe_id)
         return account.url
