@@ -2,8 +2,13 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
 from sqlalchemy.exc import IntegrityError
 
+from .authentication import registered_user
 from ..models import BaseHost, Host
-from ..services import HostService
+from ..exceptions.stripe_exceptions import (
+    HostStripeAccountCreationException,
+    HostStripeAccountNotFoundException,
+)
+from ..services import HostService, StripeHostService
 from ..utils.dev_only import dev_only
 
 api = APIRouter(prefix="/api/hosts")
@@ -26,6 +31,71 @@ def register_host(
         status_code=status.HTTP_201_CREATED,
         content={"message": "Host registered successfully."},
     )
+
+
+@api.post("/stripe-initiate", tags=["Hosts"])
+def initiate_stripe(
+    stripe_host_service: StripeHostService = Depends(),
+    current_user: Host = Depends(registered_user),
+) -> JSONResponse:
+    try:
+        stripe_host_service.create_stripe_account_for_host(current_user.id)
+    except HostStripeAccountCreationException as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        )
+    return JSONResponse(
+        status_code=status.HTTP_201_CREATED,
+        content={"message": "Stripe onboarding initiated successfully."},
+    )
+
+
+@api.post("/stripe-onboarding", tags=["Hosts"])
+def stripe_onboarding(
+    stripe_host_service: StripeHostService = Depends(),
+    current_user: Host = Depends(registered_user),
+) -> JSONResponse:
+    try:
+        onboarding_url: str = stripe_host_service.get_onboarding_link(current_user.id)
+    except HostStripeAccountNotFoundException as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={"onboarding_url": onboarding_url},
+    )
+
+
+@api.post("/stripe-update", tags=["Hosts"])
+def stripe_update(
+    stripe_host_service: StripeHostService = Depends(),
+    current_user: Host = Depends(registered_user),
+) -> JSONResponse:
+    try:
+        update_url: str = stripe_host_service.get_update_link(current_user.id)
+    except HostStripeAccountNotFoundException as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={"update_url": update_url},
+    )
+
+
+@api.post("/stripe-status", tags=["Hosts"])
+def stripe_status(
+    stripe_host_service: StripeHostService = Depends(),
+    current_user: Host = Depends(registered_user),
+) -> JSONResponse:
+    try:
+        account_status: bool = stripe_host_service.is_account_enabled(current_user.id)
+    except HostStripeAccountNotFoundException as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={"status": account_status},
+    )
+
+
+#### TESTING ROUTES ####
 
 
 @api.get("/list", response_model=list[Host], tags=["Dev"])
