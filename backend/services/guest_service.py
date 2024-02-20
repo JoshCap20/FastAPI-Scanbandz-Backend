@@ -1,15 +1,15 @@
-from backend.entities.event_entity import EventEntity
-from backend.entities.ticket_entity import TicketEntity
+from ..entities import EventEntity, TicketEntity
 from ..exceptions import (
     GuestNotFoundException,
     HostPermissionError,
     TicketNotFoundException,
     EventNotFoundException,
     IllegalGuestOperationException,
+    TicketRegistrationClosedException,
 )
 from ..database import db_session
 from ..entities import GuestEntity
-from ..models import Guest, Host, BaseGuest, Ticket, Event
+from ..models import Guest, Host, BaseGuest
 
 from typing import Sequence
 from sqlalchemy.orm import Session
@@ -107,7 +107,7 @@ class GuestService:
         if ticket.price > 0:
             raise IllegalGuestOperationException()
         if not ticket.registration_active:
-            raise IllegalGuestOperationException("Ticket registration is disabled.")
+            raise TicketRegistrationClosedException()
 
         if ticket.max_quantity:
             guest_count_query = select(func.count()).where(
