@@ -17,6 +17,8 @@ openapi_tags = {
     "description": "Host management.",
 }
 
+## Frontend should have a method to automatically redirect when url is returned in content
+
 
 @api.post("/register", tags=["Hosts"])
 def register_host(
@@ -61,7 +63,7 @@ def stripe_onboarding(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     return JSONResponse(
         status_code=status.HTTP_200_OK,
-        content={"onboarding_url": onboarding_url},
+        content={"url": onboarding_url},
     )
 
 
@@ -76,7 +78,7 @@ def stripe_update(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     return JSONResponse(
         status_code=status.HTTP_200_OK,
-        content={"update_url": update_url},
+        content={"url": update_url},
     )
 
 
