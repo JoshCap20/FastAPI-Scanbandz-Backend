@@ -57,7 +57,7 @@ def create_guest(
             )
         return JSONResponse(
             status_code=status.HTTP_200_OK,
-            content={"checkout_url": checkout},
+            content={"url": checkout},
         )
     except (TicketNotFoundException, EventNotFoundException):
         raise HTTPException(status_code=404, detail="Ticket or Event not found")
