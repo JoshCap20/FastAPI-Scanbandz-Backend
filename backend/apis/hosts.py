@@ -95,6 +95,21 @@ def stripe_status(
     )
 
 
+@api.post("/stripe-link", tags=["Hosts"])
+def stripe_login(
+    stripe_host_service: StripeHostService = Depends(),
+    current_user: Host = Depends(registered_user),
+) -> JSONResponse:
+    try:
+        login_url: str = stripe_host_service.get_account_link(current_user.id)
+    except HostStripeAccountNotFoundException as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={"url": login_url},
+    )
+
+
 #### TESTING ROUTES ####
 
 

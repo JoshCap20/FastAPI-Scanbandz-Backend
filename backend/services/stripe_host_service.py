@@ -51,7 +51,7 @@ class StripeHostService:
         try:
             account = stripe.Account.create(
                 country="US",
-                type="custom",
+                type="express",
                 email=host.email,
                 metadata={
                     "host_id": str(host.id),
@@ -141,6 +141,9 @@ class StripeHostService:
                 return_url="https://scanbandz.com",
                 type="account_update",
             )
+        except stripe.InvalidRequestError as e:
+            # Needs to onboard first
+            return self.get_onboarding_link(host_id)
         except stripe.StripeError as e:
             raise HostStripeAccountNotFoundException(
                 f"Error creating Stripe account link: {e}"
@@ -164,3 +167,12 @@ class StripeHostService:
             return True
         else:
             return False
+
+    def get_account_link(self, host_id: int) -> str:
+        host = self.host_service.get_by_id(host_id)
+
+        if not host.stripe_id or not self.is_account_enabled(host_id):
+            raise HostStripeAccountNotFoundException()
+
+        account = stripe.Account.create_login_link(host.stripe_id)
+        return account.url
