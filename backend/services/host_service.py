@@ -1,16 +1,18 @@
 from ..exceptions import (
     HostNotFoundException,
     InvalidCredentialsError,
+    HostAlreadyExistsError,
 )
-from ..entities.host_entity import HostEntity
+from ..entities import HostEntity, EventEntity, GuestEntity, TicketEntity
 from ..models import Host, BaseHost, LoginCredentials
 from ..database import db_session
 
+from datetime import datetime, timedelta
 import bcrypt
 from typing import Sequence
 from sqlalchemy.orm import Session
 from fastapi import Depends
-from sqlalchemy import select
+from sqlalchemy import select, or_, and_, func
 
 
 class HostService:
@@ -101,7 +103,28 @@ class HostService:
 
         Returns:
             Host: The created host object.
+
+        Raises:
+            HostAlreadyExistsError: If the email or phone number is already being used.
+            Exception: If an error occurs while creating the host.
         """
+        # Check if email or phone number is already being used
+        existing_host: HostEntity | None = (
+            self._session.query(HostEntity)
+            .filter(
+                or_(
+                    HostEntity.email == host.email,
+                    HostEntity.phone_number == host.phone_number,
+                )
+            )
+            .first()
+        )
+
+        if existing_host:
+            raise HostAlreadyExistsError(
+                "A host with the same email or phone number already exists."
+            )
+
         host.password = self._hash_password(host.password)
         host_entity: HostEntity = HostEntity.from_base_model(host)
         # TODO: Add error handling for duplicate email or phone number
@@ -142,9 +165,7 @@ class HostService:
             plain_password.encode("utf-8"), hashed_password.encode("utf-8")
         )
 
-    def authenticate_user(
-        self, credentials: LoginCredentials
-    ) -> tuple[int, str] | None:
+    def authenticate_user(self, credentials: LoginCredentials) -> Host:
         """
         Authenticates a user based on the provided credentials.
 
@@ -164,8 +185,91 @@ class HostService:
             raise InvalidCredentialsError()
 
         if user and HostService._verify_password(credentials.password, user.password):
-            return user.id, user.phone_number
+            return user
         raise InvalidCredentialsError()
+
+    def get_dashboard_stats(
+        self, host: Host, start_date: datetime = None, end_date: datetime = None
+    ) -> dict:
+        """
+        Returns dashboard stats for a given host within a specified time range.
+
+        Args:
+            host_id (int): The ID of the host.
+            start_date (datetime): The start date of the time range.
+            end_date (datetime): The end date of the time range.
+
+        Returns:
+            dict: A dictionary containing the number of upcoming events, total guests attended,
+                total tickets sold, and total revenue within the time range.
+        """
+        if start_date is None:
+            start_date = datetime.now() - timedelta(days=30)
+        if end_date is None:
+            end_date = datetime.now()
+
+        # Get count of events in timeframe
+        events_count = (
+            self._session.query(EventEntity)
+            .filter(
+                EventEntity.host_id == host.id,
+                EventEntity.start >= start_date,
+                EventEntity.start <= end_date,
+            )
+            .count()
+        )
+
+        # Get count of guests attended (where scan_timestamp is not null) in timeframe
+        guests_attended_count = (
+            self._session.query(GuestEntity)
+            .join(EventEntity)
+            .filter(
+                EventEntity.host_id == host.id,
+                EventEntity.start >= start_date,
+                EventEntity.start <= end_date,
+                GuestEntity.scan_timestamp.isnot(None),
+            )
+            .count()
+        )
+
+        # Get count of tickets sold
+        tickets_sold_count = (
+            self._session.query(func.sum(TicketEntity.tickets_sold))
+            .join(EventEntity, TicketEntity.event_id == EventEntity.id)
+            .filter(
+                EventEntity.host_id == host.id,
+                EventEntity.start >= start_date,
+                EventEntity.start <= end_date,
+            )
+            .scalar()
+        ) or 0
+
+        # Get total revenue
+        revenue = (
+            self._session.query(
+                func.sum(TicketEntity.price * TicketEntity.tickets_sold)
+            )
+            .join(EventEntity)
+            .filter(
+                EventEntity.host_id == host.id,
+                EventEntity.start >= start_date,
+                EventEntity.start <= end_date,
+            )
+            .scalar()
+            or 0
+        )
+
+        start_date = start_date.strftime("%m/%d/%Y")
+        end_date = end_date.strftime("%m/%d/%Y")
+
+        return {
+            "events_count": events_count,
+            "guests_attended": guests_attended_count,
+            "tickets_sold": tickets_sold_count,
+            "revenue": revenue,
+            "start_date": start_date,
+            "end_date": end_date,
+        }
 
     ### TESTING ONLY
     def set_stripe_id(self, host_id: int, stripe_id: str) -> Host:

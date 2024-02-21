@@ -1,12 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
-from sqlalchemy.exc import IntegrityError
+from datetime import datetime
 
 from .authentication import registered_user
 from ..models import BaseHost, Host
-from ..exceptions.stripe_exceptions import (
+from ..exceptions import (
     HostStripeAccountCreationException,
     HostStripeAccountNotFoundException,
+    HostAlreadyExistsError,
 )
 from ..services import HostService, StripeHostService
 from ..utils.dev_only import dev_only
@@ -26,12 +27,26 @@ def register_host(
 ) -> JSONResponse:
     try:
         host: Host = host_service.create(new_host)
-    except IntegrityError as e:
+    except HostAlreadyExistsError as e:
         detail = "An account with the provided email or phone number already exists."
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=detail)
     return JSONResponse(
         status_code=status.HTTP_201_CREATED,
         content={"message": "Host registered successfully."},
+    )
+
+
+@api.get("/dashboard-stats", tags=["Hosts"])
+def dashboard_stats(
+    host_service: HostService = Depends(),
+    start_date: datetime = None,
+    end_date: datetime = None,
+    current_user: Host = Depends(registered_user),
+) -> JSONResponse:
+    stats = host_service.get_dashboard_stats(current_user, start_date, end_date)
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content=stats,
     )
 
 
@@ -43,7 +58,9 @@ def initiate_stripe(
     try:
         stripe_host_service.create_stripe_account_for_host(current_user.id)
     except HostStripeAccountCreationException as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        )
     return JSONResponse(
         status_code=status.HTTP_201_CREATED,
         content={"message": "Stripe onboarding initiated successfully."},
