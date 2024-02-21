@@ -28,6 +28,7 @@ class Ticket(BaseTicket, TicketIdentity):
     private_key: str | None = None
 
     # Metadata
+    tickets_sold: int = 0
     created_at: datetime | None = None
     updated_at: datetime | None = None
 

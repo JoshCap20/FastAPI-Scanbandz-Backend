@@ -19,7 +19,12 @@ class TicketEntity(Base):
     price: Mapped[Decimal] = mapped_column(Numeric(10, 2))
 
     # Settings
-    max_quantity: Mapped[int] = mapped_column(Integer, nullable=True)
+    max_quantity: Mapped[int] = mapped_column(
+        Integer, nullable=True
+    )  # Max ticket limit
+    tickets_sold: Mapped[int] = mapped_column(
+        Integer, default=0
+    )  # Number of tickets sold
     visibility: Mapped[bool] = mapped_column(Boolean)
     registration_active: Mapped[bool] = mapped_column(Boolean)
 
@@ -84,6 +89,7 @@ class TicketEntity(Base):
             private_key=model.private_key,
             created_at=model.created_at,
             updated_at=model.updated_at,
+            tickets_sold=model.tickets_sold,
         )
 
     def to_model(self) -> Ticket:
@@ -103,4 +109,5 @@ class TicketEntity(Base):
             private_key=self.private_key,
             created_at=self.created_at,
             updated_at=self.updated_at,
+            tickets_sold=self.tickets_sold,
         )
