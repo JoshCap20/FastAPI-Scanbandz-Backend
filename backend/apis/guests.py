@@ -170,7 +170,7 @@ def retrieve_guest(
         guest_service (GuestService): The injected guest service dependency.
 
     Returns:
-        Guest: The response containing the status code and message or guest information.
+        JSONResponse: The response containing the status code and message or guest information.
 
     Raises:
         HTTPException: If the guest is not found.
