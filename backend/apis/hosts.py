@@ -38,12 +38,12 @@ def register_host(
 
 @api.get("/dashboard-stats", tags=["Hosts"])
 def dashboard_stats(
+    startDate: str,
+    endDate: str,
     host_service: HostService = Depends(),
-    start_date: datetime = None,
-    end_date: datetime = None,
     current_user: Host = Depends(registered_user),
 ) -> JSONResponse:
-    stats = host_service.get_dashboard_stats(current_user, start_date, end_date)
+    stats = host_service.get_dashboard_stats(current_user, startDate, endDate)
     return JSONResponse(
         status_code=status.HTTP_200_OK,
         content=stats,

@@ -188,25 +188,22 @@ class HostService:
             return user
         raise InvalidCredentialsError()
 
-    def get_dashboard_stats(
-        self, host: Host, start_date: datetime = None, end_date: datetime = None
-    ) -> dict:
+    def get_dashboard_stats(self, host: Host, start_date: str, end_date: str) -> dict:
         """
         Returns dashboard stats for a given host within a specified time range.
 
         Args:
             host_id (int): The ID of the host.
-            start_date (datetime): The start date of the time range.
-            end_date (datetime): The end date of the time range.
+            start_date (str): The start date of the time range. (Format: YYYY-MM-DD)
+            end_date (str): The end date of the time range. (Format: YYYY-MM-DD)
 
         Returns:
             dict: A dictionary containing the number of upcoming events, total guests attended,
                 total tickets sold, and total revenue within the time range.
         """
-        if start_date is None:
-            start_date = datetime.now() - timedelta(days=30)
-        if end_date is None:
-            end_date = datetime.now()
+        # Convert start and end date strings to datetime objects
+        start_date = datetime.strptime(start_date, "%Y-%m-%d")
+        end_date = datetime.strptime(end_date, "%Y-%m-%d")
 
         # Get count of events in timeframe
         events_count = (
