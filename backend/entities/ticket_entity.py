@@ -19,7 +19,7 @@ class TicketEntity(Base):
     price: Mapped[Decimal] = mapped_column(Numeric(10, 2))
 
     # Settings
-    max_quantity: Mapped[int] = mapped_column(Integer)
+    max_quantity: Mapped[int] = mapped_column(Integer, nullable=True)
     visibility: Mapped[bool] = mapped_column(Boolean)
     registration_active: Mapped[bool] = mapped_column(Boolean)
 

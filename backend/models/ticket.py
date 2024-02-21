@@ -2,8 +2,10 @@ from decimal import Decimal
 from pydantic import BaseModel, validator
 from datetime import datetime
 
+
 class TicketIdentity(BaseModel):
     id: int
+
 
 class BaseTicket(BaseModel):
     # General
@@ -12,12 +14,13 @@ class BaseTicket(BaseModel):
     price: Decimal
 
     # Settings
-    max_quantity: int
+    max_quantity: int | None = None
     visibility: bool
     registration_active: bool
 
     # Relationships
     event_id: int
+
 
 class Ticket(BaseTicket, TicketIdentity):
     # Authentication
