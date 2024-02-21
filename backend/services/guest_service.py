@@ -41,6 +41,38 @@ class GuestService:
         entities: Sequence[GuestEntity] = self._session.scalars(query).all()
         return [entity.to_model() for entity in entities]
 
+    def retrieve_guest_ticket(self, event_key: str, ticket_key: str) -> Guest:
+        """
+        Retrieves a guest by event and ticket key.
+
+        Args:
+            event_key (str): The key of the event.
+            ticket_key (str): The key of the ticket.
+
+        Returns:
+            Guest: The guest object.
+
+        Raises:
+            GuestNotFoundException: If no guest is found with the given event and ticket key.
+        """
+        query = (
+            select(GuestEntity)
+            .join(TicketEntity)
+            .join(EventEntity)
+            .where(
+                EventEntity.public_key == event_key,
+                TicketEntity.public_key == ticket_key,
+            )
+        )
+        guest_entity: GuestEntity | None = self._session.scalars(query).first()
+
+        if not guest_entity:
+            raise GuestNotFoundException(
+                f"No guest found with event key: {event_key} and ticket key: {ticket_key}"
+            )
+
+        return guest_entity.to_model()
+
     def get_by_id(self, id: int) -> Guest:
         """
         Retrieves a guest by their ID.

@@ -77,3 +77,49 @@ def create_guest(
         raise HTTPException(
             status_code=500, detail="Error creating Stripe checkout session"
         )
+
+
+@api.get("/{event_key}/{ticket_key}/retrieve", tags=["Guests"])
+def retrieve_guest(
+    event_key: str,
+    ticket_key: str,
+    guest_service: GuestService = Depends(),
+) -> JSONResponse:
+    """
+    Retrieve a guest by event and ticket key.
+
+    Args:
+        event_key (str): The key of the event.
+        ticket_key (str): The key of the ticket.
+        guest_service (GuestService): The injected guest service dependency.
+
+    Returns:
+        JSONResponse: The response containing the status code and message or guest information.
+
+    Raises:
+        HTTPException: If the guest is not found.
+    """
+    try:
+        guest: Guest = guest_service.retrieve_guest_ticket(event_key, ticket_key)
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={"guest": guest},
+        )
+    except GuestNotFoundException:
+        raise HTTPException(status_code=404, detail="Guest not found")
+
+
+### DEV ONLY ###
+@api.get("/all", tags=["Dev"], response_model=list[Guest])
+@dev_only
+def get_all_guests(guest_service: GuestService = Depends()) -> list[Guest]:
+    """
+    Retrieve all guests.
+
+    Args:
+        guest_service (GuestService): The injected guest service dependency.
+
+    Returns:
+        JSONResponse: The response containing the status code and message or guest information.
+    """
+    return guest_service.all()
