@@ -188,6 +188,96 @@ class HostService:
             return user
         raise InvalidCredentialsError()
 
+    def get_upcoming_events(self, host: Host, limit: int = 5) -> list[dict[str, str]]:
+        """
+        Retrieves the upcoming events for a host.
+
+        Args:
+            host (Host): The host object.
+            limit (int): The maximum number of events to retrieve.
+
+        Returns:
+            list[EventEntity]: A list of EventEntity objects representing the upcoming events.
+        """
+        query = (
+            self._session.query(EventEntity)
+            .filter(
+                EventEntity.host_id == host.id,
+                EventEntity.start > datetime.now(),
+            )
+            .order_by(EventEntity.start.asc())
+            .limit(limit)
+        )
+        return [
+            {
+                "name": event.name,
+                "start": event.start.strftime("%m/%d/%Y"),
+                "location": event.location,
+                "tickets_sold": self.get_event_tickets_sold(event.id),
+            }
+            for event in query
+        ]
+
+    def get_event_tickets_sold(self, event_id: int) -> int:
+        """
+        Retrieves the number of tickets sold for a given event.
+
+        Args:
+            event_id (int): The ID of the event.
+
+        Returns:
+            int: The number of tickets sold.
+        """
+        query = (
+            self._session.query(func.sum(TicketEntity.tickets_sold))
+            .filter(TicketEntity.event_id == event_id)
+            .scalar()
+        )
+        return query or 0
+
+    def get_top_events(
+        self, host: Host, start_date: datetime, end_date: datetime, limit: int = 4
+    ) -> list[dict[str, int]]:
+        # Returns top 3 events and tickets sold
+        query = (
+            self._session.query(EventEntity, func.sum(TicketEntity.tickets_sold))
+            .join(TicketEntity)
+            .filter(
+                EventEntity.host_id == host.id,
+                EventEntity.start >= start_date,
+                EventEntity.start <= end_date,
+            )
+            .group_by(EventEntity.id)
+            .order_by(func.sum(TicketEntity.tickets_sold).desc())
+            .limit(3)
+        )
+
+        return [
+            {"name": event.name, "tickets_sold": tickets_sold}
+            for event, tickets_sold in query
+        ]
+
+    def get_top_tickets(
+        self, host: Host, start_date: datetime, end_date: datetime, limit: int = 3
+    ) -> list[dict[str, int]]:
+        # Returns top 3 tickets sold
+        query = (
+            self._session.query(TicketEntity)
+            .join(EventEntity)
+            .filter(
+                EventEntity.host_id == host.id,
+                EventEntity.start >= start_date,
+                EventEntity.start <= end_date,
+            )
+            .order_by(TicketEntity.tickets_sold.desc())
+            .limit(3)
+        )
+
+        return [
+            {"name": ticket.name, "tickets_sold": ticket.tickets_sold}
+            for ticket in query
+        ]
+
     def get_dashboard_stats(self, host: Host, start_date: str, end_date: str) -> dict:
         """
         Returns dashboard stats for a given host within a specified time range.
@@ -256,16 +346,16 @@ class HostService:
             or 0
         )
 
-        start_date = start_date.strftime("%m/%d/%Y")
-        end_date = end_date.strftime("%m/%d/%Y")
-
         return {
             "events_count": events_count,
             "guests_attended": guests_attended_count,
             "tickets_sold": tickets_sold_count,
             "revenue": revenue,
-            "start_date": start_date,
-            "end_date": end_date,
+            "top_events": self.get_top_events(host, start_date, end_date),
+            "top_tickets": self.get_top_tickets(host, start_date, end_date),
+            "upcoming_events": self.get_upcoming_events(host),
+            "start_date": start_date.strftime("%m/%d/%Y"),
+            "end_date": end_date.strftime("%m/%d/%Y"),
         }
 
     ### TESTING ONLY
