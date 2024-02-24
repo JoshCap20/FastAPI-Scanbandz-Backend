@@ -8,7 +8,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from .host_entity import HostEntity
 from .ticket_entity import TicketEntity
 from .base import Base
-from ..models import Event, BaseEvent
+from ..models import Event, BaseEvent, BaseTicket
 from ..utils.encryption_service import EncryptionService
 
 
@@ -69,6 +69,11 @@ class EventEntity(Base):
             start=model.start,
             end=model.end,
             host_id=host_id,
+            tickets=(
+                [TicketEntity.from_base_model(ticket) for ticket in model.tickets]
+                if model.tickets
+                else None
+            ),
         )
 
     @classmethod

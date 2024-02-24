@@ -5,7 +5,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from typing import Type
 
 from .base import Base
-from ..models import Ticket, BaseTicket
+from ..models import Ticket, BaseTicket, UpdateTicket
 from ..utils.encryption_service import EncryptionService
 
 
@@ -56,7 +56,9 @@ class TicketEntity(Base):
     )
 
     @classmethod
-    def from_base_model(cls: Type["TicketEntity"], model: BaseTicket) -> "TicketEntity":
+    def from_base_model(
+        cls: Type["TicketEntity"], model: BaseTicket | UpdateTicket
+    ) -> "TicketEntity":
         """
         Convert a BaseTicket (Pydantic Model) to a TicketEntity (DB Model).
         """

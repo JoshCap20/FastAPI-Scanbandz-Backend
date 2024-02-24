@@ -1,6 +1,6 @@
 from ..entities.event_entity import EventEntity, TicketEntity
 from ..exceptions import EventNotFoundException, HostPermissionError
-from ..models import Event, BaseEvent, Host
+from ..models import Event, BaseEvent, Host, UpdateEvent
 from ..database import db_session
 
 from typing import Sequence
@@ -14,6 +14,8 @@ class EventService:
 
     def __init__(self, session: Session = Depends(db_session)):
         self._session = session
+
+    ## CORE FUNCTIONALITY
 
     def all(self) -> list[Event]:
         """
@@ -104,7 +106,7 @@ class EventService:
         self._session.commit()
         return event_entity.to_model()
 
-    def update(self, id: int, event: BaseEvent, host: Host) -> Event:
+    def update(self, id: int, event: UpdateEvent, host: Host) -> Event:
         """
         Update an event with the given ID.
 
@@ -126,7 +128,7 @@ class EventService:
         if not event_entity:
             raise EventNotFoundException(id)
 
-        # Check if the host matches
+        # # Check if the host matches
         if event_entity.host_id != host.id:
             raise HostPermissionError()
 
@@ -136,6 +138,23 @@ class EventService:
         event_entity.location = event.location
         event_entity.start = event.start
         event_entity.end = event.end
+
+        # Update any child tickets
+        for ticket in event.tickets:
+            if ticket.id == 0:
+                ticket.event_id = event_entity.id
+                ticket_entity: TicketEntity = TicketEntity.from_base_model(ticket)
+                self._session.add(ticket_entity)
+            else:
+                ticket_entity: TicketEntity | None = self._session.get(
+                    TicketEntity, ticket.id
+                )
+            ticket_entity.name = ticket.name
+            ticket_entity.description = ticket.description
+            ticket_entity.price = ticket.price
+            ticket_entity.max_quantity = ticket.max_quantity
+            ticket_entity.visibility = ticket.visibility
+            ticket_entity.registration_active = ticket.registration_active
 
         self._session.commit()
 
@@ -170,3 +189,19 @@ class EventService:
 
         self._session.delete(event_entity)
         self._session.commit()
+
+    ### END CORE FUNCTIONALITY
+
+    def get_events_by_host(self, host: Host) -> list[Event]:
+        """
+        Retrieve all events hosted by a given user.
+
+        Args:
+            host (Host): The host object representing the user.
+
+        Returns:
+            list[Event]: A list of Event objects hosted by the user.
+        """
+        query = select(EventEntity).where(EventEntity.host_id == host.id)
+        entities: Sequence[EventEntity] = self._session.scalars(query).all()
+        return [entity.to_model() for entity in entities]

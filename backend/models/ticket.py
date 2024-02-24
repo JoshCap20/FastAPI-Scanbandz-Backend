@@ -22,6 +22,10 @@ class BaseTicket(BaseModel):
     event_id: int
 
 
+class UpdateTicket(BaseTicket):
+    id: int
+
+
 class Ticket(BaseTicket, TicketIdentity):
     # Authentication
     public_key: str | None = None
@@ -34,6 +38,7 @@ class Ticket(BaseTicket, TicketIdentity):
 
     @validator("price", pre=True, always=True)
     def validate_price(cls, price: Decimal) -> Decimal:
+        price: Decimal = Decimal(price)
         if price < 0:
             raise ValueError("Price cannot be negative")
         return price
