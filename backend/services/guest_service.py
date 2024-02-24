@@ -9,7 +9,7 @@ from ..exceptions import (
     TicketRegistrationFullException,
 )
 from ..database import db_session
-from ..models import Guest, Host, BaseGuest, Ticket, Event
+from ..models import Guest, Host, BaseGuest, Ticket, Event, UpdateGuest
 from .stripe_payment_service import StripePaymentService
 
 from typing import Sequence
@@ -71,6 +71,37 @@ class GuestService:
                 f"No guest found with event key: {event_key} and ticket key: {ticket_key}"
             )
 
+        return guest_entity.to_model()
+
+    def update_guest_by_host(self, guest: UpdateGuest, host: Host) -> Guest:
+        """
+        Updates a guest by ID on behalf of the host.
+
+        Args:
+            guest (UpdateGuest): The guest information to update.
+            host (Host): The host object representing the host.
+
+        Returns:
+            Guest: The updated guest object.
+
+        Raises:
+            GuestNotFoundException: If no guest is found with the given ID.
+            HostPermissionError: If the host does not have permission to update the guest.
+        """
+        guest_entity: GuestEntity | None = self._session.get(GuestEntity, guest.id)
+
+        if not guest_entity:
+            raise GuestNotFoundException(f"No guest found with ID: {guest.id}")
+        if guest_entity.event.host_id != host.id:
+            raise HostPermissionError()
+
+        guest_entity.first_name = guest.first_name
+        guest_entity.last_name = guest.last_name
+        guest_entity.email = guest.email
+        guest_entity.quantity = guest.quantity
+        guest_entity.ticket_id = guest.ticket_id
+        guest_entity.event_id = guest.event_id
+        self._session.commit()
         return guest_entity.to_model()
 
     def get_by_id(self, id: int) -> Guest:
@@ -168,6 +199,32 @@ class GuestService:
             guest=guest, ticket=ticket, event=event
         )
 
+    def create_guest_by_host(
+        self, guest: BaseGuest, ticket_id: int, event_id: int, host: Host
+    ) -> Guest:
+        """
+        Creates a new guest from a base guest, ticket, and event.
+
+        Args:
+            guest (BaseGuest): The base guest object.
+            ticket (Ticket): The ticket object.
+            event (Event): The event object.
+            host (Host): The host object representing the host.
+
+        Returns:
+            Guest: The created guest object.
+        """
+        event: EventEntity | None = self._session.get(EventEntity, event_id)
+        ticket: TicketEntity | None = self._session.get(TicketEntity, ticket_id)
+
+        if event.host.id != host.id:
+            raise HostPermissionError()
+
+        if not event or not ticket:
+            raise EventNotFoundException(event_id)
+
+        return self.create_guest_from_base(guest=guest, ticket=ticket, event=event)
+
     def create_guest_from_base(
         self, guest: BaseGuest, ticket: Ticket, event: Event
     ) -> Guest:
@@ -225,3 +282,43 @@ class GuestService:
 
         self._session.delete(guest_entity)
         self._session.commit()
+
+    def get_guests_by_host(self, host: Host) -> list[Guest]:
+        """
+        Retrieves all guests belonging to the host.
+
+        Args:
+            host (Host): The host object representing the host.
+
+        Returns:
+            list[Guest]: A list of guest objects belonging to the host.
+        """
+        query = (
+            select(GuestEntity).join(EventEntity).where(EventEntity.host_id == host.id)
+        )
+        entities: Sequence[GuestEntity] = self._session.scalars(query).all()
+        return [entity.to_model() for entity in entities]
+
+    def retrieve_guest_by_host(self, guest_id: int, host: Host) -> Guest:
+        """
+        Retrieves a guest by ID on behalf of the host.
+
+        Args:
+            guest_id (int): The ID of the guest.
+            host (Host): The host object representing the host.
+
+        Returns:
+            Guest: The guest object.
+
+        Raises:
+            GuestNotFoundException: If no guest is found with the given ID.
+            HostPermissionError: If the host does not have permission to retrieve the guest.
+        """
+        guest_entity: GuestEntity | None = self._session.get(GuestEntity, guest_id)
+
+        if not guest_entity:
+            raise GuestNotFoundException(f"No guest found with ID: {guest_id}")
+        if guest_entity.event.host_id != host.id:
+            raise HostPermissionError()
+
+        return guest_entity.to_model()

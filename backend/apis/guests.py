@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse
 
 
 from .authentication import registered_user
-from ..models import Guest, BaseGuest
+from ..models import Guest, BaseGuest, Host, UpdateGuest
 from ..services import GuestService
 from ..utils.dev_only import dev_only
 from ..exceptions import (
@@ -15,6 +15,7 @@ from ..exceptions import (
     HostStripeAccountNotFoundException,
     TicketRegistrationFullException,
     StripeCheckoutSessionException,
+    HostPermissionError,
 )
 
 api = APIRouter(prefix="/api/guests")
@@ -22,6 +23,46 @@ openapi_tags = {
     "name": "Guests",
     "description": "Guest management.",
 }
+
+
+@api.post("/{event_id}/{ticket_id}/host-create", tags=["Guests"])
+def host_create_guest(
+    guest: BaseGuest,
+    ticket_id: int,
+    event_id: int,
+    current_user: Host = Depends(registered_user),
+    guest_service: GuestService = Depends(),
+) -> JSONResponse:
+    """
+    Create a new guest for the specified event and ticket on behalf of the host.
+
+    Args:
+        guest (BaseGuest): The guest information.
+        ticket_id (int): The ID of the ticket.
+        event_id (int): The ID of the event.
+        current_user (Host): The injected current user.
+        guest_service (GuestService): The injected guest service dependency.
+
+    Returns:
+        JSONResponse: The response containing the status code and message.
+
+    Raises:
+        HTTPException: If the ticket or event is not found.
+    """
+    try:
+        guest = guest_service.create_guest_by_host(
+            guest=guest, ticket_id=ticket_id, event_id=event_id, host=current_user
+        )
+        return JSONResponse(
+            status_code=status.HTTP_201_CREATED,
+            content={"message": "Guest created successfully.", "id": guest.id},
+        )
+    except (TicketNotFoundException, EventNotFoundException):
+        raise HTTPException(status_code=404, detail="Ticket or Event not found")
+    except HostPermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @api.post("/{event_id}/{ticket_id}/create", tags=["Guests"])
@@ -79,7 +120,42 @@ def create_guest(
         )
 
 
-@api.get("/{event_key}/{ticket_key}/retrieve", tags=["Guests"])
+@api.put("/host-update", tags=["Guests"])
+def update_guest_by_host(
+    guest: UpdateGuest,
+    current_user: Host = Depends(registered_user),
+    guest_service: GuestService = Depends(),
+) -> JSONResponse:
+    """
+    Update a guest by the host.
+
+    Args:
+        guest_id (int): The ID of the guest.
+        guest (BaseGuest): The updated guest information.
+        current_user (Host): The injected current user.
+        guest_service (GuestService): The injected guest service dependency.
+
+    Returns:
+        JSONResponse: The response containing the status code and message.
+
+    Raises:
+        HTTPException: If the guest is not found or the host does not have permission.
+    """
+    try:
+        guest_service.update_guest_by_host(guest, current_user)
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={"message": "Guest updated successfully."},
+        )
+    except GuestNotFoundException:
+        raise HTTPException(status_code=404, detail="Guest not found")
+    except HostPermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@api.get("/{event_key}/{ticket_key}/retrieve", response_model=Guest, tags=["Guests"])
 def retrieve_guest(
     event_key: str,
     ticket_key: str,
@@ -100,20 +176,63 @@ def retrieve_guest(
         HTTPException: If the guest is not found.
     """
     try:
-        guest: Guest = guest_service.retrieve_guest_ticket(event_key, ticket_key)
-        return JSONResponse(
-            status_code=status.HTTP_200_OK,
-            content={"guest": guest},
-        )
+        return guest_service.retrieve_guest_ticket(event_key, ticket_key)
     except GuestNotFoundException:
         raise HTTPException(status_code=404, detail="Guest not found")
 
 
+@api.get("/retrieve/{guest_id}", response_model=Guest, tags=["Guests"])
+def host_retrieve_guest(
+    guest_id: int,
+    current_user: Host = Depends(registered_user),
+    guest_service: GuestService = Depends(),
+) -> Guest:
+    """
+    Retrieve a guest by id on behalf of the host.
+
+    Args:
+        guest_id (int): The ID of the guest.
+        current_user (Host): The injected current user.
+        guest_service (GuestService): The injected guest service dependency.
+
+    Returns:
+        Guest: The guest object.
+
+    Raises:
+        HTTPException: If the guest is not found or the host does not have permission.
+    """
+    try:
+        return guest_service.retrieve_guest_by_host(guest_id, current_user)
+    except HostPermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except GuestNotFoundException:
+        raise HTTPException(status_code=404, detail="Guest not found")
+
+
+@api.get("/all", response_model=list[Guest], tags=["Guests"])
+def get_host_guests(
+    current_user: Host = Depends(registered_user),
+    guest_service: GuestService = Depends(),
+) -> JSONResponse:
+    """
+    Retrieve all guests for the host.
+
+    Args:
+        current_user (registered_user): The host information.
+        guest_service (GuestService): The injected guest service dependency.
+
+    Returns:
+        list[Guest]: The list of guests.
+    """
+    return guest_service.get_guests_by_host(current_user)
+
+
 ### DEV ONLY ###
-@api.get("/all", tags=["Dev"], response_model=list[Guest])
+@api.get("/admin-all", tags=["Dev"], response_model=list[Guest])
 @dev_only
 def get_all_guests(guest_service: GuestService = Depends()) -> list[Guest]:
     """
+    Dev Only
     Retrieve all guests.
 
     Args:
