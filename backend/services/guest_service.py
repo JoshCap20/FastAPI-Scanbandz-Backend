@@ -161,7 +161,7 @@ class GuestService:
         event: Event = event_entity.to_model()
 
         if ticket.price <= 0:
-            ticket_entity.tickets_sold += 1
+            ticket_entity.tickets_sold += guest.quantity
             self._session.commit()
             return self.create_guest_from_base(guest=guest, ticket=ticket, event=event)
         return self.payment_service.create_checkout_session(
