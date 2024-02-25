@@ -155,10 +155,10 @@ def update_guest_by_host(
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@api.get("/{event_key}/{ticket_key}/retrieve", response_model=Guest, tags=["Guests"])
+@api.get("/{event_key}/{guest_key}/retrieve", tags=["Guests"])
 def retrieve_guest(
     event_key: str,
-    ticket_key: str,
+    guest_key: str,
     guest_service: GuestService = Depends(),
 ) -> JSONResponse:
     """
@@ -166,17 +166,34 @@ def retrieve_guest(
 
     Args:
         event_key (str): The key of the event.
-        ticket_key (str): The key of the ticket.
+        guest_key (str): The key of the guest.
         guest_service (GuestService): The injected guest service dependency.
 
     Returns:
-        JSONResponse: The response containing the status code and message or guest information.
+        Guest: The response containing the status code and message or guest information.
 
     Raises:
         HTTPException: If the guest is not found.
     """
     try:
-        return guest_service.retrieve_guest_ticket(event_key, ticket_key)
+        guest: Guest = guest_service.retrieve_guest_ticket(
+            event_key=event_key, guest_key=guest_key
+        )
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={
+                "first_name": guest.first_name,
+                "last_name": guest.last_name,
+                "quantity": guest.quantity,
+                "used_quantity": 1,
+                "event_name": guest.event.name,
+                "event_start": guest.event.start.isoformat(),
+                "event_end": guest.event.end.isoformat(),
+                "ticket_name": guest.ticket.name,
+                "public_key": guest.public_key,
+            },
+        )
+
     except GuestNotFoundException:
         raise HTTPException(status_code=404, detail="Guest not found")
 
@@ -242,3 +259,23 @@ def get_all_guests(guest_service: GuestService = Depends()) -> list[Guest]:
         JSONResponse: The response containing the status code and message or guest information.
     """
     return guest_service.all()
+
+
+@api.get("/get-ticket-sample", tags=["Dev"])
+@dev_only
+def get_random_guest(guest_service: GuestService = Depends()) -> JSONResponse:
+    """
+    Dev Only
+    Retrieve a random guest.
+
+    Args:
+        guest_service (GuestService): The injected guest service dependency.
+
+    Returns:
+        JSONResponse: The response containing the status code and message or guest information.
+    """
+    guest: Guest = guest_service.all()[0]
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={"guest_key": guest.public_key, "event_key": guest.event.public_key},
+    )
