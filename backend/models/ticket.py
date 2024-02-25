@@ -2,8 +2,10 @@ from decimal import Decimal
 from pydantic import BaseModel, validator
 from datetime import datetime
 
+
 class TicketIdentity(BaseModel):
     id: int
+
 
 class BaseTicket(BaseModel):
     # General
@@ -12,12 +14,17 @@ class BaseTicket(BaseModel):
     price: Decimal
 
     # Settings
-    max_quantity: int
+    max_quantity: int | None = None
     visibility: bool
     registration_active: bool
 
     # Relationships
     event_id: int
+
+
+class UpdateTicket(BaseTicket):
+    id: int
+
 
 class Ticket(BaseTicket, TicketIdentity):
     # Authentication
@@ -25,11 +32,13 @@ class Ticket(BaseTicket, TicketIdentity):
     private_key: str | None = None
 
     # Metadata
+    tickets_sold: int = 0
     created_at: datetime | None = None
     updated_at: datetime | None = None
 
     @validator("price", pre=True, always=True)
     def validate_price(cls, price: Decimal) -> Decimal:
+        price: Decimal = Decimal(price)
         if price < 0:
             raise ValueError("Price cannot be negative")
         return price

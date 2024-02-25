@@ -47,21 +47,26 @@ def authenticate_user(
 ) -> dict[str, str]:
     # Delegate login logic to the UserService
     try:
-        user_id, phone_number = host_service.authenticate_user(credentials)  # type: ignore
+        host: Host = host_service.authenticate_user(credentials)  # type: ignore
     except (InvalidCredentialsError, HostNotFoundException):
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
     # Create a JWT token with the user's id and phone number
     token = jwt.encode(
         {
-            "user_id": user_id,
-            "phone_number": phone_number,
+            "user_id": host.id,
+            "phone_number": host.phone_number,
             "exp": datetime.utcnow() + timedelta(days=1),
         },
         _JWT_SECRET,
         algorithm=_JWT_ALGORITHM,
     )
-    return {"access_token": token, "token_type": "bearer"}
+    return {
+        "access_token": token,
+        "token_type": "bearer",
+        "email": host.email,
+        "name": f"{host.first_name} {host.last_name}",
+    }
 
 
 @api.get("/protected", tags=["Authentication"])

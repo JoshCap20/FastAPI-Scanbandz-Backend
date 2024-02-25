@@ -26,6 +26,10 @@ class BaseHost(BaseModel):
 
     @validator("phone_number", pre=True, always=True)
     def validate_phone_number(cls, phone_number: str):
+        phone_number: str = str(phone_number)
+        phone_number = phone_number.replace("-", "").replace(" ", "")
+        phone_number = phone_number.replace("(", "").replace(")", "")
+
         if len(phone_number) != 10:
             # TODO: Add non-US phone number support
             raise ValueError("Phone number should be 10 characters long")

@@ -5,6 +5,7 @@ from .host_exceptions import (
     HostNotFoundException,
     HostPermissionError,
     InvalidCredentialsError,
+    HostAlreadyExistsError,
 )
 from .ticket_exceptions import (
     TicketNotFoundException,

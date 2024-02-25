@@ -2,7 +2,7 @@ from datetime import datetime
 from pydantic import BaseModel, validator
 
 from .host import Host, HostPublic
-from .ticket import Ticket, TicketPublic
+from .ticket import Ticket, TicketPublic, BaseTicket, UpdateTicket
 
 
 class EventIdentity(BaseModel):
@@ -15,6 +15,7 @@ class BaseEvent(BaseModel):
     location: str
     start: datetime
     end: datetime
+    tickets: list[BaseTicket] | None = None
 
     @validator("end")
     def validate_end(cls, end: datetime, values: dict):
@@ -29,6 +30,11 @@ class BaseEvent(BaseModel):
         if len(name) > 90:
             raise ValueError("Name should be at most 100 characters long")
         return name
+
+
+class UpdateEvent(BaseEvent):
+    id: int
+    tickets: list[UpdateTicket] | None = None
 
 
 class Event(BaseEvent, EventIdentity):
@@ -53,7 +59,7 @@ class EventPublic(BaseModel):
     location: str
     start: datetime
     end: datetime
-    tickets: list[TicketPublic] | None = None
+    # tickets: list[TicketPublic] | None = None
     host: HostPublic | None = None
     public_key: str | None = None
 
@@ -72,11 +78,11 @@ class EventPublic(BaseModel):
             location=event.location,
             start=event.start,
             end=event.end,
-            tickets=(
-                [TicketPublic.from_ticket(ticket) for ticket in event.tickets]
-                if event.tickets
-                else None
-            ),
+            # tickets=(
+            #     [TicketPublic.from_ticket(ticket) for ticket in event.tickets]
+            #     if event.tickets
+            #     else None
+            # ),
             host=(
                 HostPublic.from_host(event.host, include_stripe_id=include_stripe_id)
                 if event.host

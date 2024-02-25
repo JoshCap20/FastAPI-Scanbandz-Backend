@@ -24,6 +24,7 @@ class BaseGuest(BaseModel):
 
     @validator("phone_number", pre=True, always=True)
     def validate_phone_number(cls, phone_number: str):
+        phone_number: str = str(phone_number)
         if len(phone_number) != 10:
             # TODO: Add non-US phone number support
             raise ValueError("Phone number should be 10 characters long")
@@ -40,6 +41,12 @@ class BaseGuest(BaseModel):
         if len(last_name) < 1:
             raise ValueError("Last name should be at least 1 character long")
         return last_name
+
+
+class UpdateGuest(BaseGuest):
+    id: int
+    event_id: int
+    ticket_id: int
 
 
 class Guest(BaseGuest, GuestIdentity):
