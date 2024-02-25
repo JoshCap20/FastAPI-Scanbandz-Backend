@@ -74,9 +74,9 @@ def update_event(
         )
 
 
-@api.get("/public/{event_id}", response_model=EventPublic, tags=["Events"])
+@api.get("/public/{event_key}", response_model=EventPublic, tags=["Events"])
 def get_public_event(
-    event_id: int, event_service: EventService = Depends()
+    event_key: str, event_service: EventService = Depends()
 ) -> EventPublic:
     """
     Retrieve a public event by its ID.
@@ -92,7 +92,7 @@ def get_public_event(
         HTTPException: If the event is not found.
     """
     try:
-        event: Event = event_service.get_by_id(event_id)
+        event: Event = event_service.get_by_public_key(event_key)
         return EventPublic.from_event(event)
     except EventNotFoundException:
         raise HTTPException(status_code=404, detail="Event not found")
