@@ -59,7 +59,7 @@ class EventPublic(BaseModel):
     location: str
     start: datetime
     end: datetime
-    tickets: list[TicketPublic] | None = None
+    # tickets: list[TicketPublic] | None = None
     host: HostPublic | None = None
     public_key: str | None = None
 
@@ -78,11 +78,11 @@ class EventPublic(BaseModel):
             location=event.location,
             start=event.start,
             end=event.end,
-            tickets=(
-                [TicketPublic.from_ticket(ticket) for ticket in event.tickets]
-                if event.tickets
-                else None
-            ),
+            # tickets=(
+            #     [TicketPublic.from_ticket(ticket) for ticket in event.tickets]
+            #     if event.tickets
+            #     else None
+            # ),
             host=(
                 HostPublic.from_host(event.host, include_stripe_id=include_stripe_id)
                 if event.host
