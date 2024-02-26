@@ -9,7 +9,7 @@ See: https://docs.gunicorn.org/en/stable/configure.html#configuration-file
 import multiprocessing
 
 # Server socket
-bind = "0.0.0.0:443"
+bind = "0.0.0.0:8080"
 
 # Workers
 workers = multiprocessing.cpu_count() * 2 + 1
@@ -19,6 +19,7 @@ timeout = 30
 keepalive = 2
 
 # Logging
+loglevel = "debug"
 accesslog = "-"
 errorlog = "-"
 
