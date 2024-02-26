@@ -98,6 +98,7 @@ class GuestService:
         guest_entity.quantity = guest.quantity
         guest_entity.ticket_id = guest.ticket_id
         guest_entity.event_id = guest.event_id
+        guest_entity.used_quantity = guest.used_quantity
         self._session.commit()
         return guest_entity.to_model()
 
