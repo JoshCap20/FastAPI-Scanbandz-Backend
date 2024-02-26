@@ -297,16 +297,19 @@ class GuestService:
             select(GuestEntity).join(EventEntity).where(EventEntity.host_id == host.id)
         )
         if filters:
-            print(filters)
-            query = self.apply_filters(query, filters)
+            query = self._apply_filters(query, filters)
         entities: Sequence[GuestEntity] = self._session.scalars(query).all()
         return [entity.to_model() for entity in entities]
 
-    def apply_filters(self, query, filters: dict):
+    def _apply_filters(self, query, filters: dict):
         if "searchEvent" in filters and filters["searchEvent"]:
             query = query.where(EventEntity.name.ilike(f"%{filters['searchEvent']}%"))
         if "searchTicket" in filters and filters["searchTicket"]:
             query = query.where(TicketEntity.name.ilike(f"%{filters['searchTicket']}%"))
+        if "searchEventID" in filters and filters["searchEventID"]:
+            query = query.where(EventEntity.id == filters["searchEventID"])
+        if "searchTicketID" in filters and filters["searchTicketID"]:
+            query = query.where(TicketEntity.id == filters["searchTicketID"])
         if "searchName" in filters and filters["searchName"]:
             query = query.where(
                 func.concat(GuestEntity.first_name, " ", GuestEntity.last_name).ilike(

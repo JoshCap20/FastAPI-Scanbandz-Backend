@@ -234,6 +234,8 @@ def get_host_guests(
     searchTicket: str | None = None,
     searchPhoneNumber: str | None = None,
     searchEmail: str | None = None,
+    searchEventID: int | None = None,
+    searchTicketID: int | None = None,
     current_user: Host = Depends(registered_user),
     guest_service: GuestService = Depends(),
 ) -> JSONResponse:
@@ -248,6 +250,7 @@ def get_host_guests(
     Returns:
         list[Guest]: The list of guests.
     """
+    # TODO: Move to pydantic model, add pagination
     filters: dict[str, str | None] = {
         "searchEvent": searchEvent,
         "searchAttended": searchAttended,
@@ -255,6 +258,8 @@ def get_host_guests(
         "searchTicket": searchTicket,
         "searchPhoneNumber": searchPhoneNumber,
         "searchEmail": searchEmail,
+        "searchEventID": searchEventID,
+        "searchTicketID": searchTicketID,
     }
     return guest_service.get_guests_by_host(current_user, filters)
 

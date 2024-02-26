@@ -185,3 +185,51 @@ class TicketService:
 
         self._session.delete(ticket_entity)
         self._session.commit()
+
+    def get_tickets_by_host(
+        self, host: Host, filters: dict[str, str | float | bool | None] = None
+    ) -> list[Ticket]:
+        """
+        Retrieve all tickets hosted by the current user.
+
+        Args:
+            filters (dict): The filters to apply to the ticket search.
+            host (Host): The host object representing the user performing the search.
+
+        Returns:
+            list[Ticket]: The list of tickets hosted by the current user.
+        """
+        query = (
+            select(TicketEntity).join(EventEntity).where(EventEntity.host_id == host.id)
+        )
+
+        if filters:
+            query = self._apply_filters(query, filters)
+
+        entities: Sequence[TicketEntity] = self._session.scalars(query).all()
+        return [entity.to_model() for entity in entities]
+
+    def _apply_filters(self, query, filters: dict):
+        if "name" in filters and filters["name"]:
+            query = query.where(TicketEntity.name.ilike(f"%{filters['name']}%"))
+        if "price" in filters and filters["price"]:
+            query = query.where(TicketEntity.price >= filters["price"])
+        if "max_quantity" in filters and filters["max_quantity"]:
+            query = query.where(TicketEntity.max_quantity >= filters["max_quantity"])
+        if "visibility" in filters and filters["visibility"] is not None:
+            query = query.where(TicketEntity.visibility == filters["visibility"])
+        if (
+            "registration_active" in filters
+            and filters["registration_active"] is not None
+        ):
+            query = query.where(
+                TicketEntity.registration_active == filters["registration_active"]
+            )
+        if "tickets_sold" in filters and filters["tickets_sold"]:
+            query = query.where(TicketEntity.tickets_sold >= filters["tickets_sold"])
+        if "event_id" in filters and filters["event_id"]:
+            query = query.where(TicketEntity.event_id == filters["event_id"])
+        print(query)
+        print(filters)
+        [print(type(filters[key])) for key in filters]
+        return query
