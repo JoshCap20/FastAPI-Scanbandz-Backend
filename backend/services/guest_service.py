@@ -319,9 +319,9 @@ class GuestService:
             query = query.where(
                 GuestEntity.phone_number.ilike(f"%{filters['searchPhoneNumber']}%")
             )
-        if "searchAttended" in filters and filters["searchAttended"] == "true":
+        if "searchAttended" in filters and filters["searchAttended"] == "attended":
             query = query.where(GuestEntity.used_quantity > 0)
-        if "searchAttended" in filters and filters["searchAttended"] == "false":
+        if "searchAttended" in filters and filters["searchAttended"] == "not attended":
             query = query.where(GuestEntity.used_quantity == 0)
 
         return query
