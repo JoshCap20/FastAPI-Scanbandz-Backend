@@ -204,4 +204,4 @@ class EventService:
         """
         query = select(EventEntity).where(EventEntity.host_id == host.id)
         entities: Sequence[EventEntity] = self._session.scalars(query).all()
-        return [entity.to_model() for entity in entities]
+        return [entity.to_model() for entity in entities] if entities else []

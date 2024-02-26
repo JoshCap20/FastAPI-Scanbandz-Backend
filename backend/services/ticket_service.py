@@ -3,8 +3,8 @@ from ..exceptions import (
     HostPermissionError,
     EventNotFoundException,
 )
-from ..entities import TicketEntity, EventEntity
-from ..models import Ticket, Host, BaseTicket
+from ..entities import TicketEntity, EventEntity, GuestEntity
+from ..models import Ticket, Host, BaseTicket, UpdateTicket
 from ..database import db_session
 
 from typing import Sequence
@@ -126,7 +126,7 @@ class TicketService:
             self._session.rollback()
             raise Exception("Error creating ticket")
 
-    def update(self, id: int, ticket: BaseTicket, host: Host) -> Ticket:
+    def update(self, ticket: UpdateTicket, host: Host) -> Ticket:
         """
         Update a ticket with the given ID.
 
@@ -142,10 +142,10 @@ class TicketService:
             TicketNotFoundException: If no ticket is found with the given ID.
             HostPermissionError: If the host does not have permission to update the ticket.
         """
-        ticket_entity: TicketEntity | None = self._session.get(TicketEntity, id)
+        ticket_entity: TicketEntity | None = self._session.get(TicketEntity, ticket.id)
 
         if not ticket_entity:
-            raise TicketNotFoundException(f"Ticket not found with ID: {id}")
+            raise TicketNotFoundException(f"Ticket not found with ID: {ticket.id}")
 
         if ticket_entity.event.host_id != host.id:
             raise HostPermissionError()
@@ -156,12 +156,35 @@ class TicketService:
         ticket_entity.max_quantity = ticket.max_quantity
         ticket_entity.visibility = ticket.visibility
         ticket_entity.registration_active = ticket.registration_active
+        if ticket.event_id != ticket_entity.event_id:
+            ticket_entity.event_id = ticket.event_id
+            self._ticket_event_id_changes(ticket_entity.id, ticket.event_id)
+
         try:
             self._session.commit()
             return ticket_entity.to_model()
         except:
             self._session.rollback()
             raise Exception("Error updating ticket")
+
+    def _ticket_event_id_changes(self, ticket_id: int, event_id: int) -> None:
+        """
+        Update the event_id of a ticket entity and associated guest tickets.
+
+        Args:
+            ticket_id (int): The ID of the ticket to be updated.
+            event_id (int): The new event ID.
+
+        Returns:
+            None
+        """
+        query = select(GuestEntity).where(GuestEntity.ticket_id == ticket_id)
+        guests: list[GuestEntity] = self._session.scalars(query).all()
+
+        for guest in guests:
+            guest.event_id = event_id
+
+        return
 
     def delete(self, id: int, host: Host) -> None:
         """
@@ -207,9 +230,12 @@ class TicketService:
             query = self._apply_filters(query, filters)
 
         entities: Sequence[TicketEntity] = self._session.scalars(query).all()
-        return [entity.to_model() for entity in entities]
+        return [entity.to_model() for entity in entities] if entities else []
 
     def _apply_filters(self, query, filters: dict):
+        if "id" in filters and filters["id"]:
+            query = query.where(TicketEntity.id == filters["id"])
+            return query
         if "name" in filters and filters["name"]:
             query = query.where(TicketEntity.name.ilike(f"%{filters['name']}%"))
         if "price" in filters and filters["price"]:
@@ -229,7 +255,5 @@ class TicketService:
             query = query.where(TicketEntity.tickets_sold >= filters["tickets_sold"])
         if "event_id" in filters and filters["event_id"]:
             query = query.where(TicketEntity.event_id == filters["event_id"])
-        print(query)
-        print(filters)
-        [print(type(filters[key])) for key in filters]
+
         return query

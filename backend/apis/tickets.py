@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
 
 from .authentication import registered_user
-from ..models import Ticket, BaseTicket, Host
+from ..models import Ticket, BaseTicket, Host, UpdateTicket
 from ..services import TicketService
 from ..utils.dev_only import dev_only
 from ..exceptions import (
@@ -38,15 +38,12 @@ def new_ticket(
 
 @api.put("/update", tags=["Tickets"])
 def update_ticket(
-    ticket_id: int,
-    ticket_details: BaseTicket,
+    baseTicket: UpdateTicket,
     ticket_service: TicketService = Depends(),
     current_user: Host = Depends(registered_user),
 ) -> JSONResponse:
     try:
-        ticket: Ticket = ticket_service.update(
-            id=ticket_id, ticket=ticket_details, host=current_user
-        )
+        ticket: Ticket = ticket_service.update(ticket=baseTicket, host=current_user)
         return JSONResponse(
             status_code=status.HTTP_200_OK,
             content={"message": "Ticket updated successfully."},
@@ -66,6 +63,7 @@ def get_host_tickets(
     registration_active: bool | None = None,
     tickets_sold: int | None = None,
     event_id: int | None = None,
+    id: int | None = None,
     ticket_service: TicketService = Depends(),
     current_user: Host = Depends(registered_user),
 ) -> list[Ticket]:
@@ -77,6 +75,7 @@ def get_host_tickets(
         "registration_active": registration_active,
         "tickets_sold": tickets_sold,
         "event_id": event_id,
+        "id": id,
     }
     return ticket_service.get_tickets_by_host(filters=filters, host=current_user)
 
