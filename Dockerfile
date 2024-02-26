@@ -7,7 +7,7 @@ COPY ./gunicorn.conf.py /workspace/gunicorn.conf.py
 COPY ./backend /workspace/backend
 WORKDIR /workspace
 
-EXPOSE 8080
+EXPOSE 443
 ENV TZ="America/New_York"
 
 CMD ["gunicorn", "-c", "gunicorn.conf.py", "backend.main:app"]
