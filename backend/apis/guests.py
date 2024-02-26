@@ -185,7 +185,7 @@ def retrieve_guest(
                 "first_name": guest.first_name,
                 "last_name": guest.last_name,
                 "quantity": guest.quantity,
-                "used_quantity": 1,
+                "used_quantity": guest.used_quantity,
                 "event_name": guest.event.name,
                 "event_start": guest.event.start.isoformat(),
                 "event_end": guest.event.end.isoformat(),
