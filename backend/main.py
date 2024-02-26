@@ -12,7 +12,7 @@ This is the Scanbandz API.
 # Metadata to improve the usefulness of OpenAPI Docs /docs API Explorer
 app = FastAPI(
     title="Scanbandz API",
-    version="0.0.1",
+    version="0.1",
     description=description,
     openapi_tags=[
         webhooks.openapi_tags,
@@ -25,8 +25,10 @@ app = FastAPI(
 )
 
 origins = [
-    "http://localhost:8000",
-    "http://localhost:4200",
+    "https://v2.scanbandz.com",
+    "https://scanbandz.com",
+    "https://v2.host.scanbandz.com",
+    "https://tickets.scanbandz.com",
 ]
 
 app.add_middleware(
@@ -48,6 +50,7 @@ for feature_api in feature_apis:
 @app.exception_handler(HostPermissionError)
 def permission_exception_handler(request: Request, e: HostPermissionError):
     return JSONResponse(status_code=404, content={"message": str(e)})
+
 
 @app.exception_handler(InvalidCredentialsError)
 def invalid_credentials_exception_handler(request: Request, e: InvalidCredentialsError):
