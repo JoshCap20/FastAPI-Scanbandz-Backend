@@ -281,7 +281,9 @@ class GuestService:
         self._session.delete(guest_entity)
         self._session.commit()
 
-    def get_guests_by_host(self, host: Host) -> list[Guest]:
+    def get_guests_by_host(
+        self, host: Host, filters: None | dict[str, str | None] = None
+    ) -> list[Guest]:
         """
         Retrieves all guests belonging to the host.
 
@@ -291,11 +293,38 @@ class GuestService:
         Returns:
             list[Guest]: A list of guest objects belonging to the host.
         """
-        query = (
+        query: list[tuple[int, str]] = (
             select(GuestEntity).join(EventEntity).where(EventEntity.host_id == host.id)
         )
+        if filters:
+            print(filters)
+            query = self.apply_filters(query, filters)
         entities: Sequence[GuestEntity] = self._session.scalars(query).all()
         return [entity.to_model() for entity in entities]
+
+    def apply_filters(self, query, filters: dict):
+        if "searchEvent" in filters and filters["searchEvent"]:
+            query = query.where(EventEntity.name.ilike(f"%{filters['searchEvent']}%"))
+        if "searchTicket" in filters and filters["searchTicket"]:
+            query = query.where(TicketEntity.name.ilike(f"%{filters['searchTicket']}%"))
+        if "searchName" in filters and filters["searchName"]:
+            query = query.where(
+                func.concat(GuestEntity.first_name, " ", GuestEntity.last_name).ilike(
+                    f"%{filters['searchName']}%"
+                )
+            )
+        if "searchEmail" in filters and filters["searchEmail"]:
+            query = query.where(GuestEntity.email.ilike(f"%{filters['searchEmail']}%"))
+        if "searchPhoneNumber" in filters and filters["searchPhoneNumber"]:
+            query = query.where(
+                GuestEntity.phone_number.ilike(f"%{filters['searchPhoneNumber']}%")
+            )
+        if "searchAttended" in filters and filters["searchAttended"] == "true":
+            query = query.where(GuestEntity.used_quantity > 0)
+        if "searchAttended" in filters and filters["searchAttended"] == "false":
+            query = query.where(GuestEntity.used_quantity == 0)
+
+        return query
 
     def retrieve_guest_by_host(self, guest_id: int, host: Host) -> Guest:
         """

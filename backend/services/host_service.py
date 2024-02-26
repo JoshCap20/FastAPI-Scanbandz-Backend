@@ -210,6 +210,7 @@ class HostService:
         )
         return [
             {
+                "id": event.id,
                 "name": event.name,
                 "start": event.start.strftime("%m/%d/%Y"),
                 "location": event.location,
@@ -253,7 +254,7 @@ class HostService:
         )
 
         return [
-            {"name": event.name, "tickets_sold": tickets_sold}
+            {"name": event.name, "tickets_sold": tickets_sold, "id": event.id}
             for event, tickets_sold in query
         ]
 

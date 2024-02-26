@@ -228,20 +228,35 @@ def host_retrieve_guest(
 
 @api.get("/all", response_model=list[Guest], tags=["Guests"])
 def get_host_guests(
+    searchEvent: str | None = None,
+    searchAttended: str | None = None,
+    searchName: str | None = None,
+    searchTicket: str | None = None,
+    searchPhoneNumber: str | None = None,
+    searchEmail: str | None = None,
     current_user: Host = Depends(registered_user),
     guest_service: GuestService = Depends(),
 ) -> JSONResponse:
     """
-    Retrieve all guests for the host.
+    Retrieve all guests or those matching filter for the host.
 
     Args:
+        filters (optional): The filters to apply to the query.
         current_user (registered_user): The host information.
         guest_service (GuestService): The injected guest service dependency.
 
     Returns:
         list[Guest]: The list of guests.
     """
-    return guest_service.get_guests_by_host(current_user)
+    filters: dict[str, str | None] = {
+        "searchEvent": searchEvent,
+        "searchAttended": searchAttended,
+        "searchName": searchName,
+        "searchTicket": searchTicket,
+        "searchPhoneNumber": searchPhoneNumber,
+        "searchEmail": searchEmail,
+    }
+    return guest_service.get_guests_by_host(current_user, filters)
 
 
 ### DEV ONLY ###
