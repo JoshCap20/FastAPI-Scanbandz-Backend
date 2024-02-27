@@ -309,13 +309,8 @@ class GuestService:
         if "searchEventID" in filters and filters["searchEventID"]:
             query = query.where(EventEntity.id == filters["searchEventID"])
         if "searchTicketID" in filters and filters["searchTicketID"]:
+            query = query.join(TicketEntity, TicketEntity.id == GuestEntity.ticket_id)
             query = query.where(TicketEntity.id == filters["searchTicketID"])
-        if "searchName" in filters and filters["searchName"]:
-            query = query.where(
-                func.concat(GuestEntity.first_name, " ", GuestEntity.last_name).ilike(
-                    f"%{filters['searchName']}%"
-                )
-            )
         if "searchEmail" in filters and filters["searchEmail"]:
             query = query.where(GuestEntity.email.ilike(f"%{filters['searchEmail']}%"))
         if "searchPhoneNumber" in filters and filters["searchPhoneNumber"]:
@@ -326,6 +321,12 @@ class GuestService:
             query = query.where(GuestEntity.used_quantity > 0)
         if "searchAttended" in filters and filters["searchAttended"] == "not attended":
             query = query.where(GuestEntity.used_quantity == 0)
+        if "searchName" in filters and filters["searchName"]:
+            query = query.where(
+                func.concat(GuestEntity.first_name, " ", GuestEntity.last_name).ilike(
+                    f"%{filters['searchName']}%"
+                )
+            )
 
         return query
 
