@@ -59,7 +59,6 @@ class TicketReceiptEntity(Base):
         cls: Type["TicketReceiptEntity"], model: BaseTicketReceipt
     ) -> "TicketReceiptEntity":
         return cls(
-            id=model.id,
             guest_id=model.guest_id,
             event_id=model.event_id,
             ticket_id=model.ticket_id,
