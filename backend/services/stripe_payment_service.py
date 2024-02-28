@@ -9,11 +9,11 @@ from decimal import Decimal
 
 from ..database import db_session
 from ..settings.config import STRIPE_SECRET_KEY
-from ..entities import GuestEntity
-from ..models import Ticket, Host, Event, BaseGuest
+from ..models import Ticket, Host, Event, BaseGuest, Guest, BaseTicketReceipt
 from .ticket_service import TicketService
+from .guest_service import GuestService
+from .receipt_service import ReceiptService
 from ..exceptions import (
-    TicketRegistrationClosedException,
     StripeCheckoutSessionException,
     HostStripeAccountNotFoundException,
 )
@@ -22,15 +22,21 @@ from ..exceptions import (
 class StripePaymentService:
     _session: Session
     ticket_svc: TicketService
+    guest_svc: GuestService
+    receipt_svc: ReceiptService
 
     def __init__(
         self,
         session: Session = Depends(db_session),
         ticket_svc: TicketService = Depends(TicketService),
+        guest_svc: GuestService = Depends(GuestService),
+        receipt_svc: ReceiptService = Depends(ReceiptService),
     ):
         stripe.api_key = STRIPE_SECRET_KEY
         self._session = session
         self.ticket_svc = ticket_svc
+        self.guest_svc = guest_svc
+        self.receipt_svc = receipt_svc
 
     # TODO: Convert metadata to a model for validation
     def create_checkout_session(
@@ -94,7 +100,7 @@ class StripePaymentService:
         Returns:
             str: The success link for the checkout session.
         """
-        return f"https://tickets.scanbandz.com/success?event={event.name}&ticket={ticket.name}&quantity={quantity}"
+        return f"https://v2.scanbandz.com/success?event={event.name}&ticket={ticket.name}&quantity={quantity}"
 
     def _get_cancel_link(self, event: Event) -> str:
         """
@@ -106,7 +112,7 @@ class StripePaymentService:
         Returns:
             str: The cancel link for the checkout session.
         """
-        return f"https://tickets.scanbandz.com/cancel?event={event.name}"
+        return f"https:/v2.scanbandz.com/cancel?event={event.name}"
 
     def _get_stripe_checkout(
         self,
@@ -255,7 +261,6 @@ class StripePaymentService:
         Args:
             session: The checkout session object from the Stripe event.
         """
-        # Access metadata
         metadata = session["metadata"]
 
         base_guest: BaseGuest = BaseGuest(
@@ -266,15 +271,36 @@ class StripePaymentService:
             quantity=metadata["quantity"],
         )
 
-        guest: GuestEntity = GuestEntity.from_base_model(
-            base_model=base_guest,
+        guest: Guest = self.guest_svc.create_guest_from_base(
+            guest=base_guest,
             ticket_id=metadata["ticket_id"],
             event_id=metadata["event_id"],
         )
 
-        self._session.add(guest)
-        self._session.commit()
+        self.receipt_svc.generate_ticket_receipt(session=session, guest_id=guest.id)
 
-        self.ticket_svc.increase_ticket_sold_count(
-            ticket_id=metadata["ticket_id"], quantity=metadata["quantity"]
+    def record_transaction(self, session: dict, guest_id: int) -> None:
+        """
+        Record the transaction in the database and send a receipt to the guest.
+
+        Args:
+            session: The checkout session object from the Stripe event.
+            guest_id: The ID of the guest who made the purchase.
+        """
+        metadata = session["metadata"]
+
+        base_ticket_receipt: BaseTicketReceipt = BaseTicketReceipt(
+            guest_id=guest_id,
+            event_id=metadata["event_id"],
+            ticket_id=metadata["ticket_id"],
+            host_id=metadata["host_id"],
+            quantity=metadata["quantity"],
+            unit_price=metadata["unit_price"],
+            total_price=metadata["unit_price"] * metadata["quantity"],
+            total_fee=session["amount_total"]
+            - metadata["unit_price"] * metadata["quantity"],
+            total_paid=session["amount_total"],
+            stripe_account_id=metadata["host_stripe_id"],
         )
+
+        self.receipt_svc.generate_ticket_receipt(base_ticket_receipt)
