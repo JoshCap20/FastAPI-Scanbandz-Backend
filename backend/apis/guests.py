@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse
 
 from .authentication import registered_user
 from ..models import Guest, BaseGuest, Host, UpdateGuest
-from ..services import GuestService
+from ..services import GuestService, TicketPaymentBridge
 from ..utils.dev_only import dev_only
 from ..exceptions import (
     GuestNotFoundException,
@@ -70,7 +70,7 @@ def create_guest(
     guest: BaseGuest,
     ticket_id: int,
     event_id: int,
-    guest_service: GuestService = Depends(),
+    ticket_payment_bridge: TicketPaymentBridge = Depends(TicketPaymentBridge),
 ) -> JSONResponse:
     """
     Create a new guest for the specified event and ticket.
@@ -79,7 +79,7 @@ def create_guest(
         guest (BaseGuest): The guest information.
         ticket_id (int): The ID of the ticket.
         event_id (int): The ID of the event.
-        guest_service (GuestService): The injected guest service dependency.
+        ticket_payment_bridge (TicketPaymentBridge): The injected ticket payment bridge dependency.
 
     Returns:
         JSONResponse: The response containing the status code and message or checkout URL.
@@ -88,7 +88,7 @@ def create_guest(
         HTTPException: If the ticket or event is not found, the ticket registration is full or closed, or the host does not have a Stripe account.
     """
     try:
-        checkout = guest_service.create_guest(
+        checkout = ticket_payment_bridge.create_guest(
             guest=guest, ticket_id=ticket_id, event_id=event_id
         )
         if isinstance(checkout, Guest):
