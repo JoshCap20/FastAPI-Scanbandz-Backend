@@ -134,7 +134,7 @@ def stripe_status(
     )
 
 
-@api.post("/stripe-link", tags=["Hosts"])
+@api.get("/stripe-link", tags=["Hosts"])
 def stripe_login(
     stripe_host_service: StripeHostService = Depends(),
     current_user: Host = Depends(registered_user),
