@@ -2,11 +2,16 @@
 Stripe payment service for creating checkout sessions.
 """
 
+from fastapi import Depends
+from sqlalchemy.orm import Session
 import stripe
 from decimal import Decimal
 
+from ..database import db_session
 from ..settings.config import STRIPE_SECRET_KEY
+from ..entities import GuestEntity
 from ..models import Ticket, Host, Event, BaseGuest
+from .ticket_service import TicketService
 from ..exceptions import (
     TicketRegistrationClosedException,
     StripeCheckoutSessionException,
@@ -15,8 +20,17 @@ from ..exceptions import (
 
 
 class StripePaymentService:
-    def __init__(self):
+    _session: Session
+    ticket_svc: TicketService
+
+    def __init__(
+        self,
+        session: Session = Depends(db_session),
+        ticket_svc: TicketService = Depends(TicketService),
+    ):
         stripe.api_key = STRIPE_SECRET_KEY
+        self._session = session
+        self.ticket_svc = ticket_svc
 
     # TODO: Convert metadata to a model for validation
     def create_checkout_session(
@@ -63,6 +77,8 @@ class StripePaymentService:
                 "ticket_id": ticket.id,
                 "quantity": guest.quantity,
                 "host_id": host.id,
+                "host_stripe_id": host.stripe_id,
+                "unit_price": ticket.price,
             },
         )
 
@@ -190,3 +206,75 @@ class StripePaymentService:
             int: The amount in cents.
         """
         return int(amount * 100)
+
+    def handle_stripe_webhook_ticket_payment(
+        self, payload: bytes, sig_header: str, stripe_endpoint_secret: str
+    ) -> None:
+        """
+        Handle the Stripe webhook for ticket payments.
+
+        Args:
+            payload: The raw payload from the request body.
+            sig_header: Stripe signature header from the request.
+            stripe_endpoint_secret: The secret used for verifying webhook signature.
+
+        Raises:
+            ValueError: If the payload or signature are invalid.
+            stripe.SignatureVerificationError: If the signature is invalid.
+        """
+        try:
+            event = stripe.Webhook.construct_event(
+                payload, sig_header, stripe_endpoint_secret
+            )
+        except ValueError:
+            # Invalid payload
+            raise ValueError("Invalid payload")
+        except stripe.SignatureVerificationError:
+            # # Invalid signature
+            raise ValueError("Invalid signature")
+
+        # BELOW CODE IS FOR TESTING ONLY
+        # try:
+        #     event = json.loads(payload.decode("utf-8"))
+        # except ValueError as e:
+        #     print("Invalid payload")
+        #     print(e)
+        #     raise ValueError("Invalid payload")
+
+        # Successfully constructed event
+        if event["type"] == "checkout.session.completed":
+            session = event["data"]["object"]
+            self._fulfill_ticket_purchase(session)
+
+        return None
+
+    def _fulfill_ticket_purchase(self, session: dict) -> None:
+        """
+        Fulfill the purchase based on the checkout session.
+
+        Args:
+            session: The checkout session object from the Stripe event.
+        """
+        # Access metadata
+        metadata = session["metadata"]
+
+        base_guest: BaseGuest = BaseGuest(
+            first_name=metadata["guest_first_name"],
+            last_name=metadata["guest_last_name"],
+            phone_number=metadata["guest_phone_number"],
+            email=metadata["guest_email"],
+            quantity=metadata["quantity"],
+        )
+
+        guest: GuestEntity = GuestEntity.from_base_model(
+            base_model=base_guest,
+            ticket_id=metadata["ticket_id"],
+            event_id=metadata["event_id"],
+        )
+
+        self._session.add(guest)
+        self._session.commit()
+
+        self.ticket_svc.increase_ticket_sold_count(
+            ticket_id=metadata["ticket_id"], quantity=metadata["quantity"]
+        )

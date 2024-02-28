@@ -117,10 +117,3 @@ class TicketEntity(Base):
             updated_at=self.updated_at,
             tickets_sold=self.tickets_sold,
         )
-
-    def increment_tickets_sold(self, session: Session) -> None:
-        """
-        Increment the number of tickets sold.
-        """
-        self.tickets_sold += 1
-        session.commit()

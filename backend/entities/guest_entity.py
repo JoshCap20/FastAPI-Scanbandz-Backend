@@ -97,6 +97,8 @@ class GuestEntity(Base):
             used_quantity=model.used_quantity,
             scan_timestamp=model.scan_timestamp,
             event=model.event,
+            event_id=model.event.id,
+            ticket_id=model.ticket.id,
             ticket=model.ticket,
             public_key=model.public_key,
             private_key=model.private_key,
