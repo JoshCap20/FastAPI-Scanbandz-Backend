@@ -4,7 +4,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from typing import Type
 
 from .base import Base
-from ..models import Host, BaseHost
+from ..models import Host, BaseHost, HostPublic
 
 
 class HostEntity(Base):
@@ -90,4 +90,12 @@ class HostEntity(Base):
             is_superuser=self.is_superuser,
             created_at=self.created_at,
             updated_at=self.updated_at,
+        )
+
+    def to_public_model(self) -> HostPublic:
+        return HostPublic(
+            id=self.id,
+            first_name=self.first_name,
+            last_name=self.last_name,
+            email=self.email,
         )

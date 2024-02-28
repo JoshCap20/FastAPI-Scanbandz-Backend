@@ -59,12 +59,8 @@ class EventPublic(BaseModel):
     location: str
     start: datetime
     end: datetime
-    # tickets: list[TicketPublic] | None = None
     host: HostPublic | None = None
     public_key: str | None = None
-
-    created_at: datetime | None = None
-    updated_at: datetime | None = None
 
     @classmethod
     def from_event(cls, event: Event, include_stripe_id: bool = False) -> "EventPublic":
@@ -83,10 +79,6 @@ class EventPublic(BaseModel):
             #     if event.tickets
             #     else None
             # ),
-            host=(
-                HostPublic.from_host(event.host, include_stripe_id=include_stripe_id)
-                if event.host
-                else None
-            ),
+            host=(HostPublic.from_host(event.host) if event.host else None),
             public_key=event.public_key,
         )

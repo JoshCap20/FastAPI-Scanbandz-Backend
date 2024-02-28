@@ -1,11 +1,11 @@
 from datetime import datetime
 from decimal import Decimal
 from sqlalchemy import ForeignKey, Integer, String, DateTime, Boolean, Numeric
-from sqlalchemy.orm import Mapped, mapped_column, relationship, Session
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from typing import Type
 
 from .base import Base
-from ..models import Ticket, BaseTicket, UpdateTicket
+from ..models import Ticket, BaseTicket, UpdateTicket, TicketPublic
 from ..utils.encryption_service import EncryptionService
 
 
@@ -116,4 +116,16 @@ class TicketEntity(Base):
             created_at=self.created_at,
             updated_at=self.updated_at,
             tickets_sold=self.tickets_sold,
+        )
+
+    def to_public_model(self) -> TicketPublic:
+        return TicketPublic(
+            id=self.id,
+            name=self.name,
+            description=self.description,
+            price=self.price,
+            max_quantity=self.max_quantity,
+            visibility=self.visibility,
+            registration_active=self.registration_active,
+            event_id=self.event_id,
         )

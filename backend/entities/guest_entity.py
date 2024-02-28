@@ -126,3 +126,16 @@ class GuestEntity(Base):
             created_at=self.created_at,
             updated_at=self.updated_at,
         )
+
+    def to_base_model(self) -> BaseGuest:
+        """
+        Convert a GuestEntity (DB Model) to a BaseGuest (Pydantic Model).
+        """
+        return BaseGuest(
+            first_name=self.first_name,
+            last_name=self.last_name,
+            phone_number=self.phone_number,
+            email=self.email,
+            quantity=self.quantity,
+            used_quantity=self.used_quantity,
+        )
