@@ -53,6 +53,9 @@ class EventEntity(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
     )
+    ticket_receipts: Mapped[list["TicketReceiptEntity"]] = relationship(
+        "TicketReceiptEntity", back_populates="event"
+    )
 
     # Methods
     @classmethod

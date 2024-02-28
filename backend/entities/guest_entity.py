@@ -59,6 +59,10 @@ class GuestEntity(Base):
         DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
     )
 
+    ticket_receipts: Mapped[list["TicketReceiptEntity"]] = relationship(
+        "TicketReceiptEntity", back_populates="guest"
+    )
+
     # Methods
     @classmethod
     def from_base_model(

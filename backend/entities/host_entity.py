@@ -35,6 +35,10 @@ class HostEntity(Base):
         "EventEntity", back_populates="host"
     )
 
+    ticket_receipts: Mapped[list["TicketReceiptEntity"]] = relationship(
+        "TicketReceiptEntity", back_populates="host"
+    )
+
     @classmethod
     def from_base_model(cls: Type["HostEntity"], model: BaseHost) -> "HostEntity":
         """
