@@ -378,6 +378,22 @@ class HostService:
         self._session.commit()
         return host.to_model()
 
+    def reset_password_request(self, email: str) -> None:
+        """
+        Send a password reset request to a host.
+
+        Args:
+            email (str): The email of the host.
+        """
+        host: HostEntity | None = (
+            self._session.query(HostEntity).filter(HostEntity.email == email).first()
+        )
+        if host:
+            # TODO: Send email with password reset link
+            pass
+
+        return None
+
     def reset_password(self, host_id: int, new_password: str) -> Host:
         """
         Reset the password for a host.

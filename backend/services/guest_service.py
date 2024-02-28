@@ -192,7 +192,9 @@ class GuestService:
         if ticket.price <= 0:
             ticket_entity.tickets_sold += guest.quantity
             self._session.commit()
-            return self.create_guest_from_base(guest=guest, ticket=ticket, event=event)
+            return self.create_guest_from_base(
+                guest=guest, ticket_id=ticket.id, event_id=event.id
+            )
         return self.payment_service.create_checkout_session(
             guest=guest, ticket=ticket, event=event
         )
@@ -221,10 +223,12 @@ class GuestService:
         if not event or not ticket:
             raise EventNotFoundException(event_id)
 
-        return self.create_guest_from_base(guest=guest, ticket=ticket, event=event)
+        return self.create_guest_from_base(
+            guest=guest, ticket_id=ticket.id, event_id=event.id
+        )
 
     def create_guest_from_base(
-        self, guest: BaseGuest, ticket: Ticket, event: Event
+        self, guest: BaseGuest, ticket_id: int, event_id: int
     ) -> Guest:
         """
         Creates a new guest from a base guest, ticket, and event.
@@ -238,7 +242,7 @@ class GuestService:
             Guest: The created guest object.
         """
         entity: GuestEntity = GuestEntity.from_base_model(
-            base_model=guest, ticket_id=ticket.id, event_id=event.id
+            base_model=guest, ticket_id=ticket_id, event_id=event_id
         )
         self._session.add(entity)
         self._session.commit()

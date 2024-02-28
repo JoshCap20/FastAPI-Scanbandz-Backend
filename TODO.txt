@@ -1,0 +1,2 @@
+1. Move create checkout session and event registration to stripe payment service, if free event then pass through to guest service instead of vise versa to allow easier guest creation after checkout.
+2. Simplify ticket sold update on guest creations for free and paid events.

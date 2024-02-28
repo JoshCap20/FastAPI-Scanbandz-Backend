@@ -257,3 +257,28 @@ class TicketService:
             query = query.where(TicketEntity.event_id == filters["event_id"])
 
         return query
+
+    def increase_ticket_sold_count(self, ticket_id: int, quantity: int) -> None:
+        """
+        Increase the ticket sold count by the given quantity.
+
+        Args:
+            ticket_id (int): The ID of the ticket to be updated.
+            quantity (int): The quantity of tickets sold.
+
+        Returns:
+            None
+        """
+        ticket_entity: TicketEntity | None = self._session.get(TicketEntity, ticket_id)
+
+        if not ticket_entity:
+            raise TicketNotFoundException(f"Ticket not found with ID: {ticket_id}")
+
+        ticket_entity.tickets_sold += quantity
+
+        try:
+            self._session.commit()
+            return
+        except:
+            self._session.rollback()
+            raise Exception("Error updating ticket sold count")
