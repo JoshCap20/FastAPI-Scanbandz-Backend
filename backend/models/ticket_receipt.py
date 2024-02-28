@@ -5,7 +5,10 @@ Model for ticket_receipt table that represents a ticket purchase receipt.
 from decimal import Decimal
 from pydantic import BaseModel, validator
 from datetime import datetime
-from .guest import Guest
+from .guest import BaseGuest
+from .event import EventPublic
+from .ticket import TicketPublic
+from .host import HostPublic
 
 
 class BaseTicketReceipt(BaseModel):
@@ -25,6 +28,10 @@ class BaseTicketReceipt(BaseModel):
 
 class TicketReceipt(BaseTicketReceipt):
     id: int
+    guest: BaseGuest
+    event: EventPublic
+    ticket: TicketPublic
+    host: HostPublic
     created_at: datetime | None = None
     updated_at: datetime | None = None
 

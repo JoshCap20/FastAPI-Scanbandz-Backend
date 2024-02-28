@@ -8,7 +8,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from .host_entity import HostEntity
 from .ticket_entity import TicketEntity
 from .base import Base
-from ..models import Event, BaseEvent, BaseTicket
+from ..models import Event, BaseEvent, EventPublic
 from ..utils.encryption_service import EncryptionService
 
 
@@ -122,4 +122,19 @@ class EventEntity(Base):
             private_key=self.private_key,
             created_at=self.created_at,
             updated_at=self.updated_at,
+        )
+
+    def to_public_model(self) -> EventPublic:
+        """
+        Convert a EventEntity (DB Model) to a EventPublic (Pydantic Model).
+        """
+        return EventPublic(
+            id=self.id,
+            name=self.name,
+            description=self.description,
+            location=self.location,
+            start=self.start,
+            end=self.end,
+            host=self.host.to_public_model(),
+            public_key=self.public_key,
         )
