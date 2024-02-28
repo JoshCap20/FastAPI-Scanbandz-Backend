@@ -22,13 +22,22 @@ openapi_tags = {
 
 @api.post("/register", tags=["Hosts"])
 def register_host(
-    new_host: BaseHost, host_service: HostService = Depends()
+    new_host: BaseHost,
+    host_service: HostService = Depends(),
+    stripe_host_service: StripeHostService = Depends(),
 ) -> JSONResponse:
     try:
         host: Host = host_service.create(new_host)
     except HostAlreadyExistsError as e:
         detail = "An account with the provided email or phone number already exists."
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=detail)
+
+    try:
+        stripe_host_service.create_stripe_account_for_host(host.id)
+    except HostStripeAccountCreationException as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        )
     return JSONResponse(
         status_code=status.HTTP_201_CREATED,
         content={"message": "Host registered successfully."},
@@ -62,24 +71,25 @@ def dashboard_stats(
     )
 
 
-@api.post("/stripe-initiate", tags=["Hosts"])
-def initiate_stripe(
-    stripe_host_service: StripeHostService = Depends(),
-    current_user: Host = Depends(registered_user),
-) -> JSONResponse:
-    try:
-        stripe_host_service.create_stripe_account_for_host(current_user.id)
-    except HostStripeAccountCreationException as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
-        )
-    return JSONResponse(
-        status_code=status.HTTP_201_CREATED,
-        content={"message": "Stripe onboarding initiated successfully."},
-    )
+# MOVE TO HOST REGISTRATION FOR NOW, WILL MOVE TO AFTER EMAIL VALIDATION
+# @api.post("/stripe-initiate", tags=["Hosts"])
+# def initiate_stripe(
+#     stripe_host_service: StripeHostService = Depends(),
+#     current_user: Host = Depends(registered_user),
+# ) -> JSONResponse:
+#     try:
+#         stripe_host_service.create_stripe_account_for_host(current_user.id)
+#     except HostStripeAccountCreationException as e:
+#         raise HTTPException(
+#             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+#         )
+#     return JSONResponse(
+#         status_code=status.HTTP_201_CREATED,
+#         content={"message": "Stripe onboarding initiated successfully."},
+#     )
 
 
-@api.post("/stripe-onboarding", tags=["Hosts"])
+@api.get("/stripe-onboarding", tags=["Hosts"])
 def stripe_onboarding(
     stripe_host_service: StripeHostService = Depends(),
     current_user: Host = Depends(registered_user),
@@ -94,7 +104,7 @@ def stripe_onboarding(
     )
 
 
-@api.post("/stripe-update", tags=["Hosts"])
+@api.get("/stripe-update", tags=["Hosts"])
 def stripe_update(
     stripe_host_service: StripeHostService = Depends(),
     current_user: Host = Depends(registered_user),
