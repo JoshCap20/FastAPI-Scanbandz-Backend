@@ -275,7 +275,7 @@ class HostService:
         )
 
         return [
-            {"name": ticket.name, "tickets_sold": ticket.tickets_sold}
+            {"name": ticket.name, "tickets_sold": ticket.tickets_sold, "id": ticket.id}
             for ticket in query
         ]
 
