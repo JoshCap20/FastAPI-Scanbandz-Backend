@@ -277,7 +277,7 @@ class StripePaymentService:
             event_id=metadata["event_id"],
         )
 
-        self.receipt_svc.generate_ticket_receipt(session=session, guest_id=guest.id)
+        self.record_transaction(session=session, guest_id=guest.id)
 
     def record_transaction(self, session: dict, guest_id: int) -> None:
         """
