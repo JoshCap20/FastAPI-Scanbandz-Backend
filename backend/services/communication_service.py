@@ -8,10 +8,10 @@ This is a core class, used to send emails and SMS messages.
 
 from ..entities import TicketReceiptEntity
 from ..models import Guest
+from ..communication import EmailClient
 
 
 class CommunicationService:
-
     def __init__(self):
         pass
 
@@ -27,7 +27,10 @@ class CommunicationService:
         Returns:
             None
         """
-        pass
+        print(
+            f"Sending email:\n\tAddress: {email}\n\tSubject: {subject}\n\tMessage: {message}"
+        )
+        EmailClient.send(to_email=email, subject=subject, message=message)
 
     def send_sms(self, phone_number: str, message: str):
         """
@@ -40,7 +43,7 @@ class CommunicationService:
         Returns:
             None
         """
-        pass
+        print(f"Sending SMS:\n\tNumber: {phone_number}\n\tMessage: {message}")
 
     def send_ticket_payment_receipt(self, ticket_receipt_entity: TicketReceiptEntity):
         """
