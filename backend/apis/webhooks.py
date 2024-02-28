@@ -3,14 +3,14 @@ from ..services import StripePaymentService
 
 from ..settings.config import STRIPE_ENDPOINT_SECRET
 
-api = APIRouter(prefix="/api/webhook", tags=["webhooks"])
+api = APIRouter(prefix="/api/webhook")
 openapi_tags = {
     "name": "Webhook",
     "description": "Handle webhooks.",
 }
 
 
-@api.post("/stripe-ticket-payments")
+@api.post("/stripe-ticket-payments", tags=["Webhook"])
 async def stripe_ticket_payments_webhook(
     request: Request, stripe_payment_service: StripePaymentService = Depends()
 ):
