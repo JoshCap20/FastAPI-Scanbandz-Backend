@@ -52,6 +52,8 @@ class ReceiptService:
         """
         self.communication_service.send_ticket_payment_receipt(ticket_receipt)
 
+    ## FETCHING METHODS ##
+
     def get_receipts_by_host(self, host: Host) -> list[TicketReceipt]:
         """
         Returns all ticket receipts for a given host.

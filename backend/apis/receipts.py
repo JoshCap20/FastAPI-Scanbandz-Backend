@@ -10,16 +10,12 @@ api = APIRouter(prefix="/api/receipts")
 openapi_tags = {"name": "Receipts", "description": "Receipt management."}
 
 
-@api.get("/tickets", tags=["Receipts"])
+@api.get("/tickets", tags=["Receipts"], response_model=list[TicketReceipt])
 def get_host_ticket_receipts(
     current_user: Host = Depends(registered_user),
     receipt_service: ReceiptService = Depends(),
-) -> JSONResponse:
-    receipts = receipt_service.get_receipts_by_host(current_user)
-    return JSONResponse(
-        status_code=status.HTTP_200_OK,
-        content=receipts,
-    )
+) -> list[TicketReceipt]:
+    return receipt_service.get_receipts_by_host(current_user)
 
 
 ### DEVELOPMENT ONLY ###

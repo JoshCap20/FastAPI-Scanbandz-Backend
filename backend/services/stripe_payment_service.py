@@ -203,7 +203,7 @@ class StripePaymentService:
 
     def _convert_to_cents(self, amount: Decimal) -> int:
         """
-        Convert the given amount to cents.
+        Convert the given amount from dollars to cents.
 
         Args:
             amount (Decimal): The amount to convert.
@@ -212,6 +212,18 @@ class StripePaymentService:
             int: The amount in cents.
         """
         return int(amount * 100)
+
+    def _convert_to_dollars(self, amount: int) -> Decimal:
+        """
+        Convert the given amount from cents to dollars.
+
+        Args:
+            amount (int): The amount to convert.
+
+        Returns:
+            Decimal: The amount in dollars.
+        """
+        return Decimal(amount) / 100
 
     def handle_stripe_webhook_ticket_payment(
         self, payload: bytes, sig_header: str, stripe_endpoint_secret: str
@@ -291,7 +303,9 @@ class StripePaymentService:
         total_price: Decimal = Decimal(metadata["unit_price"]) * Decimal(
             metadata["quantity"]
         )
-        total_fee: Decimal = Decimal(session["amount_total"]) - total_price
+        total_fee: Decimal = (
+            Decimal(self._convert_to_dollars(session["amount_total"])) - total_price
+        )
 
         base_ticket_receipt: BaseTicketReceipt = BaseTicketReceipt(
             guest_id=guest_id,
@@ -302,7 +316,7 @@ class StripePaymentService:
             unit_price=metadata["unit_price"],
             total_price=total_price,
             total_fee=total_fee,
-            total_paid=session["amount_total"],
+            total_paid=self._convert_to_dollars(session["amount_total"]),
             stripe_account_id=metadata["host_stripe_id"],
         )
 
