@@ -1,9 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
-from datetime import datetime
 
 from .authentication import registered_user
-from ..models import BaseHost, Host
+from ..models import BaseHost, Host, ResetPasswordRequest
 from ..exceptions import (
     HostStripeAccountCreationException,
     HostStripeAccountNotFoundException,
@@ -33,6 +32,19 @@ def register_host(
     return JSONResponse(
         status_code=status.HTTP_201_CREATED,
         content={"message": "Host registered successfully."},
+    )
+
+
+@api.post("/reset-password", tags=["Hosts"])
+def reset_password_request(
+    email: ResetPasswordRequest, host_service: HostService = Depends()
+) -> JSONResponse:
+    host_service.reset_password_request(email.email)
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={
+            "message": "An email has been sent to reset your password. Please check your inbox."
+        },
     )
 
 
@@ -150,15 +162,15 @@ def set_stripe_id(
     )
 
 
-@api.post("/reset-password", tags=["Dev"])
-@dev_only
-def reset_password(
-    host_id: int,
-    new_password: str,
-    host_service: HostService = Depends(),
-) -> JSONResponse:
-    host_service.reset_password(host_id, new_password)
-    return JSONResponse(
-        status_code=status.HTTP_200_OK,
-        content={"message": "Password reset successfully."},
-    )
+# @api.post("/reset-password", tags=["Dev"])
+# @dev_only
+# def reset_password(
+#     host_id: int,
+#     new_password: str,
+#     host_service: HostService = Depends(),
+# ) -> JSONResponse:
+#     host_service.reset_password(host_id, new_password)
+#     return JSONResponse(
+#         status_code=status.HTTP_200_OK,
+#         content={"message": "Password reset successfully."},
+#     )
