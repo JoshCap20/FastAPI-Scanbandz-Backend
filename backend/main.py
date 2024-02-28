@@ -2,7 +2,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
-from .apis import webhooks, hosts, events, authentication, tickets, guests
+from .apis import webhooks, hosts, events, authentication, tickets, guests, receipts
 from .exceptions import HostPermissionError, InvalidCredentialsError
 
 description = """
@@ -21,6 +21,7 @@ app = FastAPI(
         authentication.openapi_tags,
         tickets.openapi_tags,
         guests.openapi_tags,
+        receipts.openapi_tags,
     ],
 )
 
@@ -29,6 +30,7 @@ origins = [
     "https://scanbandz.com",
     "https://v2.host.scanbandz.com",
     "https://tickets.scanbandz.com",
+    # "http://localhost:4200",
 ]
 
 app.add_middleware(
@@ -40,7 +42,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-feature_apis = [webhooks, hosts, events, authentication, tickets, guests]
+feature_apis = [webhooks, hosts, events, authentication, tickets, guests, receipts]
 
 for feature_api in feature_apis:
     app.include_router(feature_api.api)
