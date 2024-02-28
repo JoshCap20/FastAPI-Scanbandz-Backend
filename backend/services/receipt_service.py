@@ -1,14 +1,8 @@
-from ..exceptions import (
-    TicketNotFoundException,
-    HostPermissionError,
-    EventNotFoundException,
-)
 from ..entities import TicketReceiptEntity
-from ..models import BaseTicketReceipt
+from ..models import BaseTicketReceipt, Host, TicketReceipt
 from ..database import db_session
 from ..services.communication_service import CommunicationService
 
-from typing import Sequence
 from sqlalchemy.orm import Session
 from fastapi import Depends
 from sqlalchemy import select
@@ -26,7 +20,9 @@ class ReceiptService:
         self._session = session
         self.communication_service = communication_service
 
-    def generate_ticket_receipt(self, base_ticket_receipt: BaseTicketReceipt):
+    def generate_ticket_receipt(
+        self, base_ticket_receipt: BaseTicketReceipt
+    ) -> TicketReceipt:
         """
         Generates a receipt for a ticket purchase.
 
@@ -47,7 +43,7 @@ class ReceiptService:
 
         return entity.to_model()
 
-    def send_ticket_receipt(self, ticket_receipt: TicketReceiptEntity):
+    def send_ticket_receipt(self, ticket_receipt: TicketReceiptEntity) -> None:
         """
         Sends a ticket receipt to the guest.
 
@@ -55,3 +51,34 @@ class ReceiptService:
             ticket_receipt (TicketReceiptEntity): The ticket receipt to send.
         """
         self.communication_service.send_ticket_payment_receipt(ticket_receipt)
+
+    def get_receipts_by_host(self, host: Host) -> list[TicketReceipt]:
+        """
+        Returns all ticket receipts for a given host.
+
+        Args:
+            host (Host): The host to get receipts for.
+
+        Returns:
+            list[TicketReceipt]: A list of ticket receipts.
+        """
+        query = select(TicketReceiptEntity).where(
+            TicketReceiptEntity.host_id == host.id
+        )
+
+        entities: list[TicketReceiptEntity] = (
+            self._session.execute(query).scalars().all()
+        )
+
+        return [entity.to_model() for entity in entities]
+
+    ### DEVELOPMENT ONLY ###
+    def dev_all(self) -> list[TicketReceiptEntity]:
+        """
+        Returns all ticket receipts.
+
+        Returns:
+            Sequence[TicketReceiptEntity]: A list of ticket receipt entities.
+        """
+        query = select(TicketReceiptEntity)
+        return self._session.execute(query).scalars().all()

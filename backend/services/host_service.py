@@ -351,7 +351,7 @@ class HostService:
             "events_count": events_count,
             "guests_attended": guests_attended_count,
             "tickets_sold": tickets_sold_count,
-            "revenue": revenue,
+            "revenue": str(revenue),
             "top_events": self.get_top_events(host, start_date, end_date),
             "top_tickets": self.get_top_tickets(host, start_date, end_date),
             "upcoming_events": self.get_upcoming_events(host),
