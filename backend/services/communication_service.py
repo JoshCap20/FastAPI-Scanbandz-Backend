@@ -89,7 +89,7 @@ class CommunicationService:
             None
         """
         ticket_link: str = (
-            "https://v2.scanbandz.com/ticket.html?guest=${guest.public_key}&event=${guest.event.public_key}"
+            f"https://v2.scanbandz.com/ticket.html?guest={guest.public_key}&event={guest.event.public_key}"
         )
 
         EMAIL_TEMPLATE: str = f"""
