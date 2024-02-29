@@ -226,7 +226,7 @@ def host_retrieve_guest(
         raise HTTPException(status_code=404, detail="Guest not found")
 
 
-@api.get("/all", response_model=list[Guest], tags=["Guests"])
+@api.get("/all", tags=["Guests"])
 def get_host_guests(
     searchEvent: str | None = None,
     searchAttended: str | None = None,
@@ -241,6 +241,8 @@ def get_host_guests(
 ) -> JSONResponse:
     """
     Retrieve all guests or those matching filter for the host.
+
+    TODO: Pagination
 
     Args:
         filters (optional): The filters to apply to the query.
@@ -261,7 +263,29 @@ def get_host_guests(
         "searchEventID": searchEventID,
         "searchTicketID": searchTicketID,
     }
-    return guest_service.get_guests_by_host(current_user, filters)
+
+    # FOR BULK SEARCH ONLY RETURN: id, first_name, last_name, phone_number, email, quantity, used_quantity, event_id, ticket_id, scan_timestamp, ticket_name, event_name
+    guests: list[Guest] = guest_service.get_guests_by_host(current_user, filters)
+
+    return [
+        {
+            "id": guest.id,
+            "first_name": guest.first_name,
+            "last_name": guest.last_name,
+            "phone_number": guest.phone_number,
+            "email": guest.email,
+            "quantity": guest.quantity,
+            "used_quantity": guest.used_quantity,
+            "event_id": guest.event.id,
+            "ticket_id": guest.ticket.id,
+            "scan_timestamp": (
+                guest.scan_timestamp.toisoformat() if guest.scan_timestamp else None
+            ),
+            "ticket_name": guest.ticket.name,
+            "event_name": guest.event.name,
+        }
+        for guest in guests
+    ]
 
 
 ### DEV ONLY ###
