@@ -79,7 +79,9 @@ def revenue_chart_data(
 ) -> JSONResponse:
     if year is None:
         year = 2023
-    stats = host_service.get_revenue_year_chart_data(host=current_user, year=year)
+    stats = host_service.get_revenue_and_ticket_count_year_chart_data(
+        host_id=current_user.id, year=year
+    )
     return JSONResponse(
         status_code=status.HTTP_200_OK,
         content=stats,

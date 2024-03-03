@@ -449,3 +449,47 @@ class HostService:
             revenue_data[month] = float(revenue)
 
         return revenue_data
+
+    def get_revenue_and_ticket_count_year_chart_data(
+        self, host_id: int, year: int
+    ) -> dict:
+        """
+        Get the revenue data and total ticket receipts count for a host for a given year.
+
+        Args:
+            host_id (int): The ID of the host for which to retrieve the data.
+            year (int): The year to retrieve the data for.
+
+        Returns:
+            dict: A dictionary containing the revenue data and total ticket receipts count for the year.
+        """
+        # Assuming a direct or efficient way to filter events by host_id first
+        event_ids_for_host = (
+            self._session.query(EventEntity.id)
+            .filter(EventEntity.host_id == host_id)
+            .subquery()
+        )
+
+        # Then, use the filtered event IDs to narrow down ticket receipts
+        query = (
+            self._session.query(
+                func.extract("month", TicketReceiptEntity.created_at).label("month"),
+                func.sum(TicketReceiptEntity.total_paid).label("total_revenue"),
+                func.count(TicketReceiptEntity.id).label("total_tickets"),
+            )
+            .filter(
+                TicketReceiptEntity.event_id.in_(event_ids_for_host),
+                func.extract("year", TicketReceiptEntity.created_at) == year,
+            )
+            .group_by("month")
+        )
+
+        # Process query results as before
+        result_data = {
+            month: {"total_revenue": 0, "total_tickets": 0} for month in range(1, 13)
+        }
+        for month, total_revenue, total_tickets in query:
+            result_data[month]["total_revenue"] = float(total_revenue)
+            result_data[month]["total_tickets"] = total_tickets
+
+        return result_data
