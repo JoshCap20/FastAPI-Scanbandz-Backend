@@ -433,7 +433,7 @@ class HostService:
         query = (
             self._session.query(
                 func.extract("month", TicketReceiptEntity.created_at),
-                func.sum(TicketReceiptEntity.total_paid),
+                func.sum(TicketReceiptEntity.total_price),
             )
             .join(EventEntity)
             .filter(
@@ -474,7 +474,7 @@ class HostService:
         query = (
             self._session.query(
                 func.extract("month", TicketReceiptEntity.created_at).label("month"),
-                func.sum(TicketReceiptEntity.total_paid).label("total_revenue"),
+                func.sum(TicketReceiptEntity.total_price).label("total_revenue"),
                 func.count(TicketReceiptEntity.id).label("total_tickets"),
             )
             .filter(
