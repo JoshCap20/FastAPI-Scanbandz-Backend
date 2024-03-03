@@ -3,11 +3,17 @@ from ..exceptions import (
     InvalidCredentialsError,
     HostAlreadyExistsError,
 )
-from ..entities import HostEntity, EventEntity, GuestEntity, TicketEntity
+from ..entities import (
+    HostEntity,
+    EventEntity,
+    GuestEntity,
+    TicketEntity,
+    TicketReceiptEntity,
+)
 from ..models import Host, BaseHost, LoginCredentials
 from ..database import db_session
 
-from datetime import datetime, timedelta
+from datetime import datetime
 import bcrypt
 from typing import Sequence
 from sqlalchemy.orm import Session
@@ -411,3 +417,35 @@ class HostService:
         host.password = self._hash_password(new_password)
         self._session.commit()
         return host.to_model()
+
+    def get_revenue_year_chart_data(self, host: Host, year: int) -> dict:
+        """
+        Get the revenue data for a host for a given year.
+        By summing up TicketReceipe.total_paid for each month of the year.
+
+        Args:
+            year (int): The year to retrieve the data for.
+
+        Returns:
+            dict: A dictionary containing the revenue data for the year.
+        """
+        # Get the revenue for each month of the year for the host
+        query = (
+            self._session.query(
+                func.extract("month", TicketReceiptEntity.created_at),
+                func.sum(TicketReceiptEntity.total_paid),
+            )
+            .join(EventEntity)
+            .filter(
+                EventEntity.host_id == host.id,
+                func.extract("year", TicketReceiptEntity.created_at) == year,
+            )
+            .group_by(func.extract("month", TicketReceiptEntity.created_at))
+        )
+
+        # Create dictionary with revenue data for each month
+        revenue_data = {month: 0 for month in range(1, 13)}
+        for month, revenue in query:
+            revenue_data[month] = float(revenue)
+
+        return revenue_data

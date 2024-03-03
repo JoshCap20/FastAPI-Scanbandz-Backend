@@ -71,6 +71,23 @@ def dashboard_stats(
     )
 
 
+@api.get("/chart-data/revenue/{year}", tags=["Hosts"])
+def revenue_chart_data(
+    year: int,
+    host_service: HostService = Depends(),
+    current_user: Host = Depends(registered_user),
+) -> JSONResponse:
+    if year is None:
+        year = 2023
+    stats = host_service.get_revenue_year_chart_data(host=current_user, year=year)
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content=stats,
+    )
+
+
+# STRIPE ROUTES
+
 # MOVE TO HOST REGISTRATION FOR NOW, WILL MOVE TO AFTER EMAIL VALIDATION
 # @api.post("/stripe-initiate", tags=["Hosts"])
 # def initiate_stripe(
