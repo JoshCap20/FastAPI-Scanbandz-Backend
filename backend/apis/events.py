@@ -74,28 +74,88 @@ def update_event(
         )
 
 
-@api.get("/public/{event_key}", response_model=EventPublic, tags=["Events"])
+### DEPRECATING
+# @api.get("/public/{event_key}", response_model=EventPublic, tags=["Events"])
+# def get_public_event_by_key(
+#     event_key: str, event_service: EventService = Depends()
+# ) -> EventPublic:
+#     """
+#     Retrieve a public event by its public key.
+
+#     Args:
+#         event_key (int): The key of the event to retrieve.
+#         event_service (EventService): The injected event service dependency.
+
+#     Returns:
+#         EventPublic: The public representation of the event.
+
+#     Raises:
+#         HTTPException: If the event is not found.
+#     """
+#     try:
+#         event: Event = event_service.get_by_public_key(event_key)
+#         return EventPublic.from_event(event)
+#     except EventNotFoundException:
+#         raise HTTPException(status_code=404, detail="Event not found")
+
+
+# @api.get("/public/id={event_id}", response_model=EventPublic, tags=["Events"])
+# def get_public_event_by_id(
+#     event_id: int, event_service: EventService = Depends()
+# ) -> EventPublic:
+#     """
+#     Retrieve a public event by its ID.
+
+#     Args:
+#         event_id (int): The ID of the event to retrieve.
+#         event_service (EventService): The injected event service dependency.
+
+#     Returns:
+#         EventPublic: The public representation of the event.
+
+#     Raises:
+#         HTTPException: If the event is not found.
+#     """
+#     try:
+#         event: Event = event_service.get_by_id(event_id)
+#         return EventPublic.from_event(event)
+#     except EventNotFoundException:
+#         raise HTTPException(status_code=404, detail="Event not found")
+
+
+@api.get("/public", response_model=EventPublic, tags=["Events"])
 def get_public_event(
-    event_key: str, event_service: EventService = Depends()
+    event_id: int | None = Query(None, alias="id"),
+    event_key: str | None = Query(None, alias="key"),
+    event_service: EventService = Depends(),
 ) -> EventPublic:
     """
-    Retrieve a public event by its ID.
+    Retrieve a public event by its ID or public key.
 
     Args:
         event_id (int): The ID of the event to retrieve.
-        event_service (EventService): The injected event service dependency.
+        event_key (str): The public key of the event to retrieve.
 
     Returns:
         EventPublic: The public representation of the event.
 
     Raises:
-        HTTPException: If the event is not found.
+        HTTPException: If the event is not found or the event ID and key is not provided.
     """
+    event: Event | None = None
+
+    if event_id is None and event_key is None:
+        raise HTTPException(status_code=400, detail="Event ID or key must be provided")
+
     try:
-        event: Event = event_service.get_by_public_key(event_key)
-        return EventPublic.from_event(event)
-    except EventNotFoundException:
+        if event_id is not None:
+            event = event_service.get_by_id(event_id)
+        elif event_key is not None:
+            event = event_service.get_by_public_key(event_key)
+    except EventNotFoundException as e:
         raise HTTPException(status_code=404, detail="Event not found")
+
+    return EventPublic.from_event(event)
 
 
 @api.get("/get/all", response_model=list[Event], tags=["Events"])
