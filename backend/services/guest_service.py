@@ -346,6 +346,7 @@ class GuestService:
             )
 
         guest_entity.used_quantity += 1
+        guest_entity.scan_timestamp = func.now()
         self._session.commit()
 
         return guest_entity.to_model()
