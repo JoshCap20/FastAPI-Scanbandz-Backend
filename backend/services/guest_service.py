@@ -345,4 +345,7 @@ class GuestService:
                 f"No guest found with event key: {event_key} and guest key: {guest_key}"
             )
 
+        guest_entity.used_quantity += 1
+        self._session.commit()
+
         return guest_entity.to_model()
