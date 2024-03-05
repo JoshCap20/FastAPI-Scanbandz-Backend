@@ -1,4 +1,5 @@
 """Database engine and session dependency injection niceties."""
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
@@ -16,7 +17,7 @@ def _engine_str() -> str:
     return f"{dialect}://{user}:{password}@{host}:{port}/{database}"
 
 
-engine = create_engine(_engine_str(), echo=True)
+engine = create_engine(_engine_str(), echo=True, pool_pre_ping=True)
 """Application-level SQLAlchemy database engine."""
 
 
