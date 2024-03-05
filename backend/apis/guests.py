@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse
 
 
 from .authentication import registered_user
-from ..models import Guest, BaseGuest, Host, UpdateGuest
+from ..models import Guest, BaseGuest, Host, UpdateGuest, GuestValidation
 from ..services import GuestService, TicketPaymentBridge
 from ..utils.dev_only import dev_only
 from ..exceptions import (
@@ -16,6 +16,7 @@ from ..exceptions import (
     TicketRegistrationFullException,
     StripeCheckoutSessionException,
     HostPermissionError,
+    NoAvailableTicketsException,
 )
 
 api = APIRouter(prefix="/api/guests")
@@ -122,16 +123,14 @@ def create_guest(
 
 @api.post("/validate", tags=["Guests", "Scan"])
 def scan_guest_ticket(
-    event_key: str,
-    guest_key: str,
+    guestValidation: GuestValidation,
     guest_service: GuestService = Depends(),
 ) -> JSONResponse:
     """
     Validate a guest ticket by scanning the QR code.
 
     Args:
-        event_key (str): The key of the event.
-        guest_key (str): The key of the guest.
+        GuestValidation (GuestValidation): The guest and event keys.
         guest_service (GuestService): The injected guest service dependency.
 
     Returns:
@@ -141,13 +140,17 @@ def scan_guest_ticket(
         HTTPException: If the guest is not found.
     """
     try:
-        guest_service.validate_guest_ticket(event_key, guest_key)
+        guest_service.validate_guest_ticket(
+            event_key=guestValidation.event_key, guest_key=guestValidation.guest_key
+        )
         return JSONResponse(
             status_code=status.HTTP_200_OK,
             content={"message": "Ticket scanned successfully."},
         )
     except GuestNotFoundException:
         raise HTTPException(status_code=404, detail="Guest not found")
+    except NoAvailableTicketsException:
+        raise HTTPException(status_code=400, detail="No available tickets")
 
 
 @api.put("/host-update", tags=["Guests"])

@@ -3,6 +3,7 @@ from ..exceptions import (
     GuestNotFoundException,
     HostPermissionError,
     EventNotFoundException,
+    NoAvailableTicketsException,
 )
 from ..database import db_session
 from ..models import Guest, Host, BaseGuest, UpdateGuest
@@ -318,7 +319,7 @@ class GuestService:
 
         return guest_entity.to_model()
 
-    def validate_guest_ticket(self, event_key: str, guest_key: str) -> Guest:
+    def validate_guest_ticket(self, event_key: str, guest_key: str) -> bool:
         """
         Validates a guest ticket by event and ticket key.
 
@@ -331,6 +332,7 @@ class GuestService:
 
         Raises:
             GuestNotFoundException: If no guest is found with the given event and ticket key.
+            NoAvailableTicketsException: If no tickets are available for the guest.
         """
         query = (
             select(GuestEntity)
@@ -345,8 +347,11 @@ class GuestService:
                 f"No guest found with event key: {event_key} and guest key: {guest_key}"
             )
 
+        if guest_entity.used_quantity >= guest_entity.quantity:
+            raise NoAvailableTicketsException("No tickets remaining for guest")
+
         guest_entity.used_quantity += 1
         guest_entity.scan_timestamp = func.now()
         self._session.commit()
 
-        return guest_entity.to_model()
+        return True

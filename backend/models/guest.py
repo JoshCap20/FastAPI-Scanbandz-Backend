@@ -62,3 +62,8 @@ class Guest(BaseGuest, GuestIdentity):
     # Authentication
     public_key: str
     private_key: str
+
+
+class GuestValidation(BaseModel):
+    event_key: str
+    guest_key: str
