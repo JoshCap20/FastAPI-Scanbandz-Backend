@@ -97,7 +97,7 @@ def create_guest(
                 content={"message": "Guest created successfully.", "id": checkout.id},
             )
         return JSONResponse(
-            status_code=status.HTTP_200_OK,
+            status_code=status.HTTP_307_TEMPORARY_REDIRECT,
             content={"url": checkout},
         )
     except (TicketNotFoundException, EventNotFoundException):
