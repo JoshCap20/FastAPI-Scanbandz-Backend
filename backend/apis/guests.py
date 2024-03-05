@@ -311,9 +311,7 @@ def get_host_guests(
             "used_quantity": guest.used_quantity,
             "event_id": guest.event.id,
             "ticket_id": guest.ticket.id,
-            "scan_timestamp": (
-                guest.scan_timestamp.toisoformat() if guest.scan_timestamp else None
-            ),
+            "scan_timestamp": (guest.scan_timestamp if guest.scan_timestamp else None),
             "ticket_name": guest.ticket.name,
             "event_name": guest.event.name,
         }
