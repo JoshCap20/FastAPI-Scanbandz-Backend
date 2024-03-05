@@ -120,6 +120,36 @@ def create_guest(
         )
 
 
+@api.post("/validate", tags=["Guests", "Scan"])
+def scan_guest_ticket(
+    event_key: str,
+    guest_key: str,
+    guest_service: GuestService = Depends(),
+) -> JSONResponse:
+    """
+    Validate a guest ticket by scanning the QR code.
+
+    Args:
+        event_key (str): The key of the event.
+        guest_key (str): The key of the guest.
+        guest_service (GuestService): The injected guest service dependency.
+
+    Returns:
+        JSONResponse: The response containing the status code and message.
+
+    Raises:
+        HTTPException: If the guest is not found.
+    """
+    try:
+        guest_service.validate_guest_ticket(event_key, guest_key)
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={"message": "Ticket scanned successfully."},
+        )
+    except GuestNotFoundException:
+        raise HTTPException(status_code=404, detail="Guest not found")
+
+
 @api.put("/host-update", tags=["Guests"])
 def update_guest_by_host(
     guest: UpdateGuest,
