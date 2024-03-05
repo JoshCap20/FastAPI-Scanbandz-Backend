@@ -61,12 +61,22 @@ class EventPublic(BaseModel):
     end: datetime
     host: HostPublic | None = None
     public_key: str | None = None
+    tickets: list[TicketPublic] | None = None
 
     @classmethod
-    def from_event(cls, event: Event, include_stripe_id: bool = False) -> "EventPublic":
+    def from_event(cls, event: Event) -> "EventPublic":
         """
         Create an EventPublic instance from an Event model instance or dict.
         """
+        tickets: list[TicketPublic] | None = (
+            [
+                TicketPublic.from_ticket(ticket)
+                for ticket in event.tickets
+                if ticket.visibility
+            ]
+            if event.tickets
+            else None
+        )
         return cls(
             id=event.id,
             name=event.name,
@@ -74,11 +84,7 @@ class EventPublic(BaseModel):
             location=event.location,
             start=event.start,
             end=event.end,
-            # tickets=(
-            #     [TicketPublic.from_ticket(ticket) for ticket in event.tickets]
-            #     if event.tickets
-            #     else None
-            # ),
+            tickets=tickets,
             host=(HostPublic.from_host(event.host) if event.host else None),
             public_key=event.public_key,
         )

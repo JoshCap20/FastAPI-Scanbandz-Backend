@@ -1,4 +1,5 @@
 from decimal import Decimal
+from typing import Union
 from pydantic import BaseModel, validator
 from datetime import datetime
 
@@ -15,8 +16,8 @@ class BaseTicket(BaseModel):
 
     # Settings
     max_quantity: int | None = None
-    visibility: bool
-    registration_active: bool
+    visibility: bool  # Publicly visible (i.e. General Admission, not VIP)
+    registration_active: bool  # Can be purchased
 
     # Relationships
     event_id: int
@@ -50,8 +51,6 @@ class TicketPublic(BaseModel):
     name: str
     description: str | None = None
     price: Decimal
-    max_quantity: int
-    visibility: bool
     registration_active: bool
     event_id: int
 
@@ -65,8 +64,6 @@ class TicketPublic(BaseModel):
             name=ticket.name,
             description=ticket.description,
             price=ticket.price,
-            max_quantity=ticket.max_quantity,
-            visibility=ticket.visibility,
             registration_active=ticket.registration_active,
             event_id=ticket.event_id,
         )
