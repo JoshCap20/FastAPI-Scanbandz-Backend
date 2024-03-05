@@ -19,9 +19,9 @@ class BaseTicketReceipt(BaseModel):
 
     quantity: int
     unit_price: Decimal
-    total_price: Decimal
-    total_fee: Decimal
-    total_paid: Decimal
+    total_price: Decimal # what host gets
+    total_fee: Decimal # added fee on top
+    total_paid: Decimal # total_price + total_fee
 
     stripe_account_id: str
 
