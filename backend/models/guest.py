@@ -65,5 +65,6 @@ class Guest(BaseGuest, GuestIdentity):
 
 
 class GuestValidation(BaseModel):
-    event_key: str
+    event_id: int
+    ticket_id: int
     guest_key: str

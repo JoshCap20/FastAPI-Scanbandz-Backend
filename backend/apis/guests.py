@@ -141,7 +141,9 @@ def scan_guest_ticket(
     """
     try:
         guest_service.validate_guest_ticket(
-            event_key=guestValidation.event_key, guest_key=guestValidation.guest_key
+            event_id=guestValidation.event_id,
+            ticket_id=guestValidation.ticket_id,
+            guest_key=guestValidation.guest_key,
         )
         return JSONResponse(
             status_code=status.HTTP_200_OK,
@@ -224,6 +226,7 @@ def retrieve_guest(
                 "event_end": guest.event.end.isoformat(),
                 "ticket_name": guest.ticket.name,
                 "public_key": guest.public_key,
+                "ticket_id": guest.ticket.id,
             },
         )
 

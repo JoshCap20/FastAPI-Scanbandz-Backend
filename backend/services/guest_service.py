@@ -6,7 +6,7 @@ from ..exceptions import (
     NoAvailableTicketsException,
 )
 from ..database import db_session
-from ..models import Guest, Host, BaseGuest, UpdateGuest
+from ..models import Guest, Host, BaseGuest, UpdateGuest, GuestValidation
 from .ticket_service import TicketService
 from .communication_service import CommunicationService
 
@@ -319,13 +319,12 @@ class GuestService:
 
         return guest_entity.to_model()
 
-    def validate_guest_ticket(self, event_key: str, guest_key: str) -> bool:
+    def validate_guest_ticket(self, guestValidation: GuestValidation) -> bool:
         """
         Validates a guest ticket by event and ticket key.
 
         Args:
-            event_key (str): The key of the event.
-            ticket_key (str): The key of the ticket.
+            GuestValidation: The guest validation object.
 
         Returns:
             Guest: The guest object.
@@ -334,18 +333,20 @@ class GuestService:
             GuestNotFoundException: If no guest is found with the given event and ticket key.
             NoAvailableTicketsException: If no tickets are available for the guest.
         """
-        query = (
-            select(GuestEntity)
-            .join(EventEntity)
-            .where(EventEntity.public_key == event_key)
-            .where(GuestEntity.public_key == guest_key)
+        event_id = guestValidation.event_id
+        ticket_id = guestValidation.ticket_id
+        guest_key = guestValidation.guest_key
+
+        guest_entity: GuestEntity | None = (
+            self._session.query(GuestEntity)
+            .filter(GuestEntity.event_id == event_id)
+            .filter(GuestEntity.ticket_id == ticket_id)
+            .filter(GuestEntity.public_key == guest_key)
+            .first()
         )
-        guest_entity: GuestEntity | None = self._session.scalars(query).first()
 
         if not guest_entity:
-            raise GuestNotFoundException(
-                f"No guest found with event key: {event_key} and guest key: {guest_key}"
-            )
+            raise GuestNotFoundException()
 
         if guest_entity.used_quantity >= guest_entity.quantity:
             raise NoAvailableTicketsException("No tickets remaining for guest")
