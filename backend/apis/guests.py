@@ -140,11 +140,7 @@ def scan_guest_ticket(
         HTTPException: If the guest is not found.
     """
     try:
-        guest_service.validate_guest_ticket(
-            event_id=guestValidation.event_id,
-            ticket_id=guestValidation.ticket_id,
-            guest_key=guestValidation.guest_key,
-        )
+        guest_service.validate_guest_ticket(guestValidation=guestValidation)
         return JSONResponse(
             status_code=status.HTTP_200_OK,
             content={"message": "Ticket scanned successfully."},
