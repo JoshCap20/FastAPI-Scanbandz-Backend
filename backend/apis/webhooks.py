@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, status
 from ..services import StripePaymentService
 
 from ..settings.config import STRIPE_ENDPOINT_SECRET
@@ -10,9 +10,20 @@ openapi_tags = {
 }
 
 
+async def process_payment_in_background(
+    stripe_payment_service: StripePaymentService, payload: bytes, sig_header: str
+):
+    # Logic to process payment in the background
+    stripe_payment_service.handle_stripe_webhook_ticket_payment(
+        payload, sig_header, STRIPE_ENDPOINT_SECRET
+    )
+
+
 @api.post("/stripe-ticket-payments", tags=["Webhook"])
 async def stripe_ticket_payments_webhook(
-    request: Request, stripe_payment_service: StripePaymentService = Depends()
+    background_tasks: BackgroundTasks,
+    request: Request,
+    stripe_payment_service: StripePaymentService = Depends(),
 ):
     """
     Handle Stripe webhooks for ticket payments.
@@ -21,8 +32,9 @@ async def stripe_ticket_payments_webhook(
     sig_header: str | None = request.headers.get("Stripe-Signature")
 
     try:
-        event = stripe_payment_service.handle_stripe_webhook_ticket_payment(
-            payload, sig_header, STRIPE_ENDPOINT_SECRET
+        # Add the background task
+        background_tasks.add_task(
+            process_payment_in_background, stripe_payment_service, payload, sig_header
         )
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
