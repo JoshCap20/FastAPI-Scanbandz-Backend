@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            width: 80%;
+            margin: auto;
+            padding: 20px;
+        }
+
+        .header {
+            background-color: #f3f3f3;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .content {
+            margin-top: 20px;
+        }
+
+        .footer {
+            margin-top: 20px;
+            font-size: 0.8em;
+            text-align: center;
+            color: #888;
+        }
+
+        .button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>Thank you for your purchase!</h2>
+        </div>
+        <div class="content">
+            <p>You have successfully purchased <strong>{{quantity}}</strong> tickets for the event
+                <strong>{{event_name}}</strong>.</p>
+            <p><strong>Ticket:</strong> {{ticket_name}}<br>
+                <strong>Quantity:</strong> {{quantity}}<br>
+                <strong>Total Paid:</strong> ${{total_paid}}
+            </p>
+            <a href="https://v2.scanbandz.com/your-tickets" class="button">View Your Tickets</a>
+        </div>
+        <div class="footer">
+            If you have any questions, please contact us at support@example.com.
+        </div>
+    </div>
+</body>
+
+</html>

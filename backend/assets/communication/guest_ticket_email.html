@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            width: 80%;
+            margin: auto;
+            padding: 20px;
+        }
+
+        .header {
+            background-color: #f3f3f3;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .content {
+            margin-top: 20px;
+        }
+
+        .footer {
+            margin-top: 20px;
+            font-size: 0.8em;
+            text-align: center;
+            color: #888;
+        }
+
+        .button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h3>Your Ticket for {{event_name}}</h3>
+        <p>Here is your link to download your ticket for the event. Click the button below to access your ticket.</p>
+        <a href="{{ticket_link}}" class="button">Download Ticket</a>
+        <p class="footer">Need help? Contact us at support@example.com</p>
+    </div>
+</body>
+
+</html>
