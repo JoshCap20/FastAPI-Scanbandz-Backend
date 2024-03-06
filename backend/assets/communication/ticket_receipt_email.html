@@ -11,16 +11,25 @@
             width: 80%;
             margin: auto;
             padding: 20px;
+            max-width: 600px;
+            background: white;
         }
 
         .header {
-            background-color: #f3f3f3;
-            padding: 10px;
+            background-color: #000000;
+            color: white;
+            padding: 10px 20px;
             text-align: center;
+        }
+
+        .header img {
+            max-height: 50px;
         }
 
         .content {
             margin-top: 20px;
+            line-height: 1.6;
+            font-size: 16px;
         }
 
         .footer {
@@ -30,12 +39,18 @@
             color: #888;
         }
 
-        .button {
-            background-color: #007bff;
+        .content a {
+            background-color: #000000;
             color: white;
             padding: 10px;
             text-decoration: none;
             border-radius: 5px;
+            display: block;
+            text-align: center;
+        }
+
+        .content a:hover {
+            background-color: #ff1744;
         }
     </style>
 </head>
@@ -43,19 +58,22 @@
 <body>
     <div class="container">
         <div class="header">
-            <h2>Thank you for your purchase!</h2>
+            <img src="https://v2.host.scanbandz.com/assets/real/img/logo-white.png" alt="Scanbandz Logo" />
         </div>
         <div class="content">
             <p>You have successfully purchased <strong>{{quantity}}</strong> tickets for the event
-                <strong>{{event_name}}</strong>.</p>
+                <strong>{{event_name}}</strong>.
+            </p>
             <p><strong>Ticket:</strong> {{ticket_name}}<br>
                 <strong>Quantity:</strong> {{quantity}}<br>
-                <strong>Total Paid:</strong> ${{total_paid}}
+                <strong>Unit Price:</strong> ${{unit_price}}<br>
+                <strong>Subtotal: </strong> ${{total_price}}<br>
+                <strong>Fee and Taxes: </strong> ${{total_fee}}<br>
+                <strong>Total: </strong> ${{total_paid}}
             </p>
-            <a href="https://v2.scanbandz.com/your-tickets" class="button">View Your Tickets</a>
         </div>
         <div class="footer">
-            If you have any questions, please contact us at support@example.com.
+            Need help? Contact us at <a href="mailto:support@scanbandz.com">support@scanbandz.com</a>
         </div>
     </div>
 </body>

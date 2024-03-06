@@ -9,15 +9,16 @@ This is a core class, used to send emails and SMS messages.
 from ..entities import TicketReceiptEntity
 from ..models import Guest
 from ..communication import EmailClient
+from ..utils.email_template_render import render_email_template
 
 
 class CommunicationService:
     def __init__(self):
         pass
 
-    def send_email(self, email: str, subject: str, message: str):
+    def send_html_email(self, email: str, subject: str, message: str):
         """
-        Sends an email to a recipient.
+        Sends an HTML email to a recipient.
 
         Args:
             email (str): The email address of the recipient.
@@ -27,9 +28,22 @@ class CommunicationService:
         Returns:
             None
         """
-        print(
-            f"Sending email:\n\tAddress: {email}\n\tSubject: {subject}\n\tMessage: {message}"
+        EmailClient.send(
+            to_email=email, subject=subject, message=message, mime_type="text/html"
         )
+
+    def send_email(self, email: str, subject: str, message: str):
+        """
+        Sends a plain text email to a recipient.
+
+        Args:
+            email (str): The email address of the recipient.
+            subject (str): The subject of the email.
+            message (str): The message to send in the email.
+
+        Returns:
+            None
+        """
         EmailClient.send(to_email=email, subject=subject, message=message)
 
     def send_sms(self, phone_number: str, message: str):
@@ -55,27 +69,22 @@ class CommunicationService:
         Returns:
             None
         """
-        # TODO: Better email templates
         email: str = ticket_receipt_entity.guest.email
-        quantity: int = ticket_receipt_entity.quantity
-        total_paid: float = ticket_receipt_entity.total_paid
 
-        event_name: str = ticket_receipt_entity.event.name
-        ticket_name: str = ticket_receipt_entity.ticket.name
-
-        template: str = f"""
-        Thank you for your purchase!
-        
-        You have successfully purchased {quantity} tickets for the event {event_name}.
-        
-        Ticket: {ticket_name}
-        Quantity: {quantity}
-        
-        
-        Total Paid: ${total_paid}
-        """
-        return self.send_email(
-            email=email, subject="Ticket Payment Receipt", message=template
+        EMAIL_TEMPLATE = render_email_template(
+            template_name="ticket_receipt_email.html",
+            variables={
+                "event_name": ticket_receipt_entity.event.name,
+                "ticket_name": ticket_receipt_entity.ticket.name,
+                "quantity": ticket_receipt_entity.quantity,
+                "total_paid": ticket_receipt_entity.total_price,
+                "total_price": ticket_receipt_entity.total_price,
+                "total_fee": ticket_receipt_entity.total_fee,
+                "unit_price": ticket_receipt_entity.unit_price,
+            },
+        )
+        return self.send_html_email(
+            email=email, subject="Ticket Payment Receipt", message=EMAIL_TEMPLATE
         )
 
     def send_guest_ticket_link(self, guest: Guest):
@@ -92,13 +101,19 @@ class CommunicationService:
             f"https://v2.scanbandz.com/ticket?guest={guest.public_key}&event={guest.event.public_key}"
         )
 
-        EMAIL_TEMPLATE: str = f"""
-        Here is your ticket link: {ticket_link}
-        
-        Have a great time at the event!
-        """
+        EMAIL_TEMPLATE = render_email_template(
+            template_name="guest_ticket_email.html",
+            variables={
+                "ticket_link": ticket_link,
+                "event_start_date": guest.event.start.strftime("%B %d, %Y, %I:%M %p"),
+                "event_end_date": guest.event.end.strftime("%B %d, %Y, %I:%M %p"),
+                "event_name": guest.event.name,
+                "ticket_quantity": guest.quantity,
+                "location": guest.event.location,
+            },
+        )
 
-        self.send_email(
+        self.send_html_email(
             email=guest.email,
             subject=f"Your Ticket for {guest.event.name}",
             message=EMAIL_TEMPLATE,
