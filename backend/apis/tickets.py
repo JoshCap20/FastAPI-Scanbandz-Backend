@@ -36,6 +36,23 @@ def new_ticket(
         raise HTTPException(status_code=403, detail="Invalid permissions")
 
 
+@api.get("/scan-ticket-options/{event_key}", tags=["Tickets", "Scan"])
+def get_all_tickets_for_scanning_options(
+    event_key: str,
+    ticket_service: TicketService = Depends(),
+) -> JSONResponse:
+    try:
+        tickets: list[Ticket] = ticket_service.get_all_tickets_id_and_name_by_event_key(
+            event_key
+        )
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={"tickets": tickets},
+        )
+    except EventNotFoundException:
+        raise HTTPException(status_code=404, detail="Event not found")
+
+
 @api.put("/update", tags=["Tickets"])
 def update_ticket(
     baseTicket: UpdateTicket,

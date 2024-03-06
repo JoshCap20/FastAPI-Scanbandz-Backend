@@ -282,3 +282,23 @@ class TicketService:
         except:
             self._session.rollback()
             raise Exception("Error updating ticket sold count")
+
+    def get_all_tickets_id_and_name_by_event_key(self, event_key: str) -> list[dict]:
+        """
+        Retrieve all tickets' id and name for a given event key.
+
+        Args:
+            event_key (str): The public key of the event.
+
+        Returns:
+            list[dict]: A list of dictionaries containing the ticket ID and name.
+        """
+        query = (
+            select(TicketEntity.id, TicketEntity.name)
+            .join(EventEntity)
+            .where(EventEntity.public_key == event_key)
+        )
+        result = self._session.execute(query).all()
+
+        tickets = [{"id": row[0], "name": row[1]} for row in result] if result else []
+        return tickets
