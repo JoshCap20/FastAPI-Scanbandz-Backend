@@ -31,12 +31,17 @@ async def stripe_ticket_payments_webhook(
     payload: bytes = await request.body()
     sig_header: str | None = request.headers.get("Stripe-Signature")
 
-    try:
-        # Add the background task
-        background_tasks.add_task(
-            process_payment_in_background, stripe_payment_service, payload, sig_header
+    if not stripe_payment_service.is_valid_signature(
+        payload, sig_header, STRIPE_ENDPOINT_SECRET
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid signature or payload",
         )
-    except Exception as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+    # Add the background task
+    background_tasks.add_task(
+        process_payment_in_background, stripe_payment_service, payload, sig_header
+    )
 
     return {"received": True}

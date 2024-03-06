@@ -225,6 +225,30 @@ class StripePaymentService:
         """
         return Decimal(amount) / 100
 
+    def is_valid_signature(
+        self, payload: bytes, sig_header: str, stripe_endpoint_secret: str
+    ) -> bool:
+        """
+        Verify the signature of a Stripe webhook request.
+
+        Args:
+            payload: The raw payload from the request body.
+            sig_header: Stripe signature header from the request.
+            stripe_endpoint_secret: The secret used for verifying webhook signature.
+
+        Returns:
+            bool: True if the signature is valid, False otherwise.
+        """
+        try:
+            stripe.Webhook.construct_event(payload, sig_header, stripe_endpoint_secret)
+            return True
+        except ValueError:
+            # Invalid payload
+            return False
+        except stripe.SignatureVerificationError:
+            # Invalid signature
+            return False
+
     def handle_stripe_webhook_ticket_payment(
         self, payload: bytes, sig_header: str, stripe_endpoint_secret: str
     ) -> None:
@@ -240,17 +264,9 @@ class StripePaymentService:
             ValueError: If the payload or signature are invalid.
             stripe.SignatureVerificationError: If the signature is invalid.
         """
-        try:
-            event = stripe.Webhook.construct_event(
-                payload, sig_header, stripe_endpoint_secret
-            )
-        except ValueError:
-            # Invalid payload
-            raise ValueError("Invalid payload")
-        except stripe.SignatureVerificationError:
-            # # Invalid signature
-            raise ValueError("Invalid signature")
-
+        event = stripe.Webhook.construct_event(
+            payload, sig_header, stripe_endpoint_secret
+        )
         # BELOW CODE IS FOR TESTING ONLY
         # try:
         #     event = json.loads(payload.decode("utf-8"))
