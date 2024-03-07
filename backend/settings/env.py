@@ -7,7 +7,7 @@ import dotenv
 dotenv.load_dotenv(f"{os.path.dirname(__file__)}/.env", verbose=True)
 
 
-def getenv(variable: str) -> str:
+def getenv(variable: str, default: str = None) -> str:
     """Get value of environment variable or raise an error if undefined.
 
     Unlike `os.getenv`, our application expects all environment variables it needs to be defined
@@ -17,5 +17,7 @@ def getenv(variable: str) -> str:
     value = os.getenv(variable)
     if value is not None:
         return value
+    elif default is not None:
+        return default
     else:
         raise NameError(f"Error: {variable} Environment Variable not Defined")

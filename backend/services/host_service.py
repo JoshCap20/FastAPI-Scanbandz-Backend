@@ -26,79 +26,10 @@ class HostService:
 
     def __init__(self, session: Session = Depends(db_session)):
         self._session = session
-
-    def all(self) -> list[Host]:
-        """
-        Retrieves all hosts from the database.
-
-        Returns:
-            A list of Host objects representing all hosts in the database.
-        """
-        query = select(HostEntity)
-        entities: Sequence[HostEntity] = self._session.scalars(query).all()
-        return [entity.to_model() for entity in entities]
-
-    def get_by_id(self, id: int) -> Host:
-        """
-        Retrieve a host by its ID.
-
-        Args:
-            id (int): The ID of the host to retrieve.
-
-        Returns:
-            Host: The host object.
-
-        Raises:
-            HostNotFoundException: If no host is found with the specified ID.
-        """
-        host_entity: HostEntity | None = self._session.get(HostEntity, id)
-
-        if not host_entity:
-            raise HostNotFoundException(f"Host not found with ID: {id}")
-
-        return host_entity.to_model()
-
-    def get_by_phone_number(self, key: str) -> Host:
-        """
-        Retrieves a host entity by phone number.
-
-        Args:
-            key (str): The phone number of the host.
-
-        Returns:
-            Host: The host entity.
-
-        Raises:
-            HostNotFoundException: If no host is found with the given phone number.
-        """
-        query = select(HostEntity).where(HostEntity.phone_number == key)
-        host_entity: HostEntity | None = self._session.scalars(query).first()
-
-        if not host_entity:
-            raise HostNotFoundException(f"Host not found with phone number: {key}")
-
-        return host_entity.to_model()
-
-    def get_by_email(self, key: str) -> Host:
-        """
-        Retrieves a host by email.
-
-        Args:
-            key (str): The email of the host.
-
-        Returns:
-            Host: The host object.
-
-        Raises:
-            HostNotFoundException: If no host is found with the given email.
-        """
-        query = select(HostEntity).where(HostEntity.email == key)
-        host_entity: HostEntity | None = self._session.scalars(query).first()
-
-        if not host_entity:
-            raise HostNotFoundException(f"Host not found with email: {key}")
-
-        return host_entity.to_model()
+        
+    ##############################################
+    ##### CORE HOST MANAGEMENT METHODS ###########
+    ##############################################
 
     def create(self, host: BaseHost) -> Host:
         """
@@ -193,7 +124,105 @@ class HostService:
         if user and HostService._verify_password(credentials.password, user.password):
             return user
         raise InvalidCredentialsError()
+    
+    ##############################################
+    ######## HOST RETRIEVAL METHODS ##############
+    ##############################################
+    
+    def all(self) -> list[Host]:
+        """
+        Retrieves all hosts from the database.
 
+        Returns:
+            A list of Host objects representing all hosts in the database.
+        """
+        query = select(HostEntity)
+        entities: Sequence[HostEntity] = self._session.scalars(query).all()
+        return [entity.to_model() for entity in entities]
+
+    def get_by_id(self, id: int) -> Host:
+        """
+        Retrieve a host by its ID.
+
+        Args:
+            id (int): The ID of the host to retrieve.
+
+        Returns:
+            Host: The host object.
+
+        Raises:
+            HostNotFoundException: If no host is found with the specified ID.
+        """
+        host_entity: HostEntity | None = self._session.get(HostEntity, id)
+
+        if not host_entity:
+            raise HostNotFoundException(f"Host not found with ID: {id}")
+
+        return host_entity.to_model()
+
+    def get_by_phone_number(self, key: str) -> Host:
+        """
+        Retrieves a host entity by phone number.
+
+        Args:
+            key (str): The phone number of the host.
+
+        Returns:
+            Host: The host entity.
+
+        Raises:
+            HostNotFoundException: If no host is found with the given phone number.
+        """
+        query = select(HostEntity).where(HostEntity.phone_number == key)
+        host_entity: HostEntity | None = self._session.scalars(query).first()
+
+        if not host_entity:
+            raise HostNotFoundException(f"Host not found with phone number: {key}")
+
+        return host_entity.to_model()
+
+    def get_by_email(self, key: str) -> Host:
+        """
+        Retrieves a host by email.
+
+        Args:
+            key (str): The email of the host.
+
+        Returns:
+            Host: The host object.
+
+        Raises:
+            HostNotFoundException: If no host is found with the given email.
+        """
+        query = select(HostEntity).where(HostEntity.email == key)
+        host_entity: HostEntity | None = self._session.scalars(query).first()
+
+        if not host_entity:
+            raise HostNotFoundException(f"Host not found with email: {key}")
+
+        return host_entity.to_model()
+
+    def get_event_tickets_sold(self, event_id: int) -> int:
+        """
+        Retrieves the number of tickets sold for a given event.
+
+        Args:
+            event_id (int): The ID of the event.
+
+        Returns:
+            int: The number of tickets sold.
+        """
+        query = (
+            self._session.query(func.sum(TicketEntity.tickets_sold))
+            .filter(TicketEntity.event_id == event_id)
+            .scalar()
+        )
+        return query or 0
+    
+    ##############################################
+    ##### HOST DASHBOARD STATISTICS METHODS ######
+    ##############################################
+    
     def get_upcoming_events(self, host: Host, limit: int = 5) -> list[dict[str, str]]:
         """
         Retrieves the upcoming events for a host.
@@ -225,27 +254,21 @@ class HostService:
             for event in query
         ]
 
-    def get_event_tickets_sold(self, event_id: int) -> int:
-        """
-        Retrieves the number of tickets sold for a given event.
-
-        Args:
-            event_id (int): The ID of the event.
-
-        Returns:
-            int: The number of tickets sold.
-        """
-        query = (
-            self._session.query(func.sum(TicketEntity.tickets_sold))
-            .filter(TicketEntity.event_id == event_id)
-            .scalar()
-        )
-        return query or 0
-
     def get_top_events(
         self, host: Host, start_date: datetime, end_date: datetime, limit: int = 4
     ) -> list[dict[str, int]]:
-        # Returns top 3 events and tickets sold
+        """
+        Retrieves the top events and the number of tickets sold within a specified date range.
+
+        Args:
+            host (Host): The host object.
+            start_date (datetime): The start date of the date range.
+            end_date (datetime): The end date of the date range.
+            limit (int, optional): The maximum number of events to retrieve. Defaults to 4.
+
+        Returns:
+            list[dict[str, int]]: A list of dictionaries containing the event name, number of tickets sold, and event ID.
+        """
         query = (
             self._session.query(EventEntity, func.sum(TicketEntity.tickets_sold))
             .join(TicketEntity)
@@ -256,7 +279,7 @@ class HostService:
             )
             .group_by(EventEntity.id)
             .order_by(func.sum(TicketEntity.tickets_sold).desc())
-            .limit(3)
+            .limit(limit)
         )
 
         return [
@@ -267,7 +290,19 @@ class HostService:
     def get_top_tickets(
         self, host: Host, start_date: datetime, end_date: datetime, limit: int = 3
     ) -> list[dict[str, int]]:
-        # Returns top 3 tickets sold
+        """
+        Retrieves the top tickets sold for a given host within a specified date range.
+
+        Args:
+            host (Host): The host for which to retrieve the top tickets.
+            start_date (datetime): The start date of the date range.
+            end_date (datetime): The end date of the date range.
+            limit (int, optional): The maximum number of top tickets to retrieve. Defaults to 3.
+
+        Returns:
+            list[dict[str, int]]: A list of dictionaries representing the top tickets, each containing
+            the ticket name, number of tickets sold, and ticket ID.
+        """
         query = (
             self._session.query(TicketEntity)
             .join(EventEntity)
@@ -277,7 +312,7 @@ class HostService:
                 EventEntity.start <= end_date,
             )
             .order_by(TicketEntity.tickets_sold.desc())
-            .limit(3)
+            .limit(limit)
         )
 
         return [
@@ -364,6 +399,51 @@ class HostService:
             "start_date": start_date.strftime("%m/%d/%Y"),
             "end_date": end_date.strftime("%m/%d/%Y"),
         }
+        
+    def get_revenue_and_ticket_count_year_chart_data(
+        self, host_id: int, year: int
+    ) -> dict:
+        """
+        Get the revenue data and total ticket receipts count for a host for a given year.
+
+        Args:
+            host_id (int): The ID of the host for which to retrieve the data.
+            year (int): The year to retrieve the data for.
+
+        Returns:
+            dict: A dictionary containing the revenue data and total ticket receipts count for the year.
+        """
+        # Assuming a direct or efficient way to filter events by host_id first
+        event_ids_for_host = (
+            self._session.query(EventEntity.id)
+            .filter(EventEntity.host_id == host_id)
+            .subquery()
+        )
+
+        # Then, use the filtered event IDs to narrow down ticket receipts
+        query = (
+            self._session.query(
+                func.extract("month", TicketReceiptEntity.created_at).label("month"),
+                func.sum(TicketReceiptEntity.total_price).label("total_revenue"),
+                func.count(TicketReceiptEntity.id).label("total_tickets"),
+            )
+            .filter(
+                TicketReceiptEntity.event_id.in_(event_ids_for_host),
+                func.extract("year", TicketReceiptEntity.created_at) == year,
+            )
+            .group_by("month")
+        )
+
+        # Process query results as before
+        result_data = {
+            month: {"total_revenue": 0, "total_tickets": 0} for month in range(1, 13)
+        }
+        for month, total_revenue, total_tickets in query:
+            result_data[month]["total_revenue"] = float(total_revenue)
+            result_data[month]["total_tickets"] = total_tickets
+
+        return result_data
+
 
     ### TESTING ONLY
     def set_stripe_id(self, host_id: int, stripe_id: str) -> Host:
@@ -418,78 +498,3 @@ class HostService:
         self._session.commit()
         return host.to_model()
 
-    def get_revenue_year_chart_data(self, host: Host, year: int) -> dict:
-        """
-        Get the revenue data for a host for a given year.
-        By summing up TicketReceipe.total_paid for each month of the year.
-
-        Args:
-            year (int): The year to retrieve the data for.
-
-        Returns:
-            dict: A dictionary containing the revenue data for the year.
-        """
-        # Get the revenue for each month of the year for the host
-        query = (
-            self._session.query(
-                func.extract("month", TicketReceiptEntity.created_at),
-                func.sum(TicketReceiptEntity.total_price),
-            )
-            .join(EventEntity)
-            .filter(
-                EventEntity.host_id == host.id,
-                func.extract("year", TicketReceiptEntity.created_at) == year,
-            )
-            .group_by(func.extract("month", TicketReceiptEntity.created_at))
-        )
-
-        # Create dictionary with revenue data for each month
-        revenue_data = {month: 0 for month in range(1, 13)}
-        for month, revenue in query:
-            revenue_data[month] = float(revenue)
-
-        return revenue_data
-
-    def get_revenue_and_ticket_count_year_chart_data(
-        self, host_id: int, year: int
-    ) -> dict:
-        """
-        Get the revenue data and total ticket receipts count for a host for a given year.
-
-        Args:
-            host_id (int): The ID of the host for which to retrieve the data.
-            year (int): The year to retrieve the data for.
-
-        Returns:
-            dict: A dictionary containing the revenue data and total ticket receipts count for the year.
-        """
-        # Assuming a direct or efficient way to filter events by host_id first
-        event_ids_for_host = (
-            self._session.query(EventEntity.id)
-            .filter(EventEntity.host_id == host_id)
-            .subquery()
-        )
-
-        # Then, use the filtered event IDs to narrow down ticket receipts
-        query = (
-            self._session.query(
-                func.extract("month", TicketReceiptEntity.created_at).label("month"),
-                func.sum(TicketReceiptEntity.total_price).label("total_revenue"),
-                func.count(TicketReceiptEntity.id).label("total_tickets"),
-            )
-            .filter(
-                TicketReceiptEntity.event_id.in_(event_ids_for_host),
-                func.extract("year", TicketReceiptEntity.created_at) == year,
-            )
-            .group_by("month")
-        )
-
-        # Process query results as before
-        result_data = {
-            month: {"total_revenue": 0, "total_tickets": 0} for month in range(1, 13)
-        }
-        for month, total_revenue, total_tickets in query:
-            result_data[month]["total_revenue"] = float(total_revenue)
-            result_data[month]["total_tickets"] = total_tickets
-
-        return result_data

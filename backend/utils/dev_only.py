@@ -12,7 +12,7 @@ Example:
         return "This route is only accessible in development mode
 """
 
-from ..settings.env import getenv
+from ..settings.config import MODE
 from fastapi import HTTPException
 from functools import wraps
 
@@ -21,7 +21,7 @@ from functools import wraps
 def dev_only(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
-        if getenv("MODE") == "development":
+        if MODE == "development":
             return func(*args, **kwargs)
         raise HTTPException(status_code=404, detail="Development only route")
 

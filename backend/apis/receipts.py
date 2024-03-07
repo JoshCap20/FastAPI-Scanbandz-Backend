@@ -21,9 +21,6 @@ def get_host_ticket_receipts(
 ### DEVELOPMENT ONLY ###
 @api.get("/dev-all", response_model=list[TicketReceipt], tags=["Dev"])
 @dev_only
-def dev_all_receipts(receipt_service: ReceiptService = Depends()) -> JSONResponse:
+def dev_all_receipts(receipt_service: ReceiptService = Depends()):
     receipts = receipt_service.dev_all()
-    return JSONResponse(
-        status_code=status.HTTP_200_OK,
-        content=receipts,
-    )
+    return [receipt.to_model() for receipt in receipts]
