@@ -26,7 +26,7 @@ class HostService:
 
     def __init__(self, session: Session = Depends(db_session)):
         self._session = session
-        
+
     ##############################################
     ##### CORE HOST MANAGEMENT METHODS ###########
     ##############################################
@@ -124,11 +124,39 @@ class HostService:
         if user and HostService._verify_password(credentials.password, user.password):
             return user
         raise InvalidCredentialsError()
-    
+
+    ##############################################
+    ########### STRIPE HELPER METHODS ###########
+    ##############################################
+
+    def set_stripe_id(self, host_id: int, stripe_id: str) -> Host:
+        """
+        Set the Stripe ID for a host.
+
+        Args:
+            host_id (int): The ID of the host.
+            stripe_id (str): The Stripe ID to set.
+
+        Returns:
+            Host: The updated host object.
+        """
+        host: HostEntity | None = self._session.get(HostEntity, host_id)
+        if not host:
+            raise HostNotFoundException(f"No host found with ID: {host_id}")
+        host.stripe_id = stripe_id
+
+        try:
+            self._session.commit()
+        except:
+            self._session.rollback()
+            raise Exception("An error occurred while setting the Stripe ID.")
+
+        return host.to_model()
+
     ##############################################
     ######## HOST RETRIEVAL METHODS ##############
     ##############################################
-    
+
     def all(self) -> list[Host]:
         """
         Retrieves all hosts from the database.
@@ -218,11 +246,11 @@ class HostService:
             .scalar()
         )
         return query or 0
-    
+
     ##############################################
     ##### HOST DASHBOARD STATISTICS METHODS ######
     ##############################################
-    
+
     def get_upcoming_events(self, host: Host, limit: int = 5) -> list[dict[str, str]]:
         """
         Retrieves the upcoming events for a host.
@@ -399,7 +427,7 @@ class HostService:
             "start_date": start_date.strftime("%m/%d/%Y"),
             "end_date": end_date.strftime("%m/%d/%Y"),
         }
-        
+
     def get_revenue_and_ticket_count_year_chart_data(
         self, host_id: int, year: int
     ) -> dict:
@@ -444,25 +472,7 @@ class HostService:
 
         return result_data
 
-
     ### TESTING ONLY
-    def set_stripe_id(self, host_id: int, stripe_id: str) -> Host:
-        """
-        Set the Stripe ID for a host.
-
-        Args:
-            host_id (int): The ID of the host.
-            stripe_id (str): The Stripe ID to set.
-
-        Returns:
-            Host: The updated host object.
-        """
-        host: HostEntity | None = self._session.get(HostEntity, host_id)
-        if not host:
-            raise HostNotFoundException(f"No host found with ID: {host_id}")
-        host.stripe_id = stripe_id
-        self._session.commit()
-        return host.to_model()
 
     def reset_password_request(self, email: str) -> None:
         """
@@ -497,4 +507,3 @@ class HostService:
         host.password = self._hash_password(new_password)
         self._session.commit()
         return host.to_model()
-

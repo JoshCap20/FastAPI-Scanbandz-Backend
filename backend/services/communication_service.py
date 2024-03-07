@@ -1,9 +1,5 @@
 """
-TODO
-
 Used to send emails and SMS messages to users.
-
-This is a core class, used to send emails and SMS messages.
 """
 
 from ..entities import TicketReceiptEntity
@@ -15,8 +11,10 @@ from ..utils.email_template_render import render_email_template
 class CommunicationService:
     def __init__(self):
         pass
-
+    
+    ##############################
     ### CORE EMAIL/SMS METHODS ###
+    ##############################
 
     def send_html_email(self, email: str, subject: str, message: str) -> None:
         """
@@ -62,7 +60,9 @@ class CommunicationService:
         # TODO: Implement SMS sending
         print(f"Sending SMS:\n\tNumber: {phone_number}\n\tMessage: {message}")
 
+    ##############################
     ### SPECIFIC EMAIL METHODS ###
+    ##############################
 
     def send_ticket_payment_receipt(
         self, ticket_receipt_entity: TicketReceiptEntity

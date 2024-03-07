@@ -15,7 +15,9 @@ class EventService:
     def __init__(self, session: Session = Depends(db_session)):
         self._session = session
 
-    ## CORE FUNCTIONALITY
+    ############################
+    #### CORE FUNCTIONALITY ####
+    ############################
 
     def all(self) -> list[Event]:
         """
@@ -102,8 +104,13 @@ class EventService:
             Event: The created event object.
         """
         event_entity: EventEntity = EventEntity.from_base_model(event, host.id)
-        self._session.add(event_entity)
-        self._session.commit()
+        try:
+            self._session.add(event_entity)
+            self._session.commit()
+        except:
+            self._session.rollback()
+            raise Exception("An error occurred while creating the event.")
+        
         return event_entity.to_model()
 
     def update(self, id: int, event: UpdateEvent, host: Host) -> Event:
@@ -156,7 +163,11 @@ class EventService:
             ticket_entity.visibility = ticket.visibility
             ticket_entity.registration_active = ticket.registration_active
 
-        self._session.commit()
+        try:
+            self._session.commit()
+        except:
+            self._session.rollback()
+            raise Exception("An error occurred while updating the event.")
 
         return event_entity.to_model()
 
@@ -187,10 +198,12 @@ class EventService:
         for ticket in tickets:
             self._session.delete(ticket)
 
-        self._session.delete(event_entity)
-        self._session.commit()
-
-    ### END CORE FUNCTIONALITY
+        try:
+            self._session.delete(event_entity)
+            self._session.commit()
+        except:
+            self._session.rollback()
+            raise Exception("An error occurred while deleting the event.")
 
     def get_events_by_host(self, host: Host) -> list[Event]:
         """

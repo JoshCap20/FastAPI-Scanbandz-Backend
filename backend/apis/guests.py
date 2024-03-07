@@ -251,7 +251,7 @@ def host_retrieve_guest(
         HTTPException: If the guest is not found or the host does not have permission.
     """
     try:
-        return guest_service.retrieve_guest_by_host(guest_id, current_user)
+        return guest_service.retrieve_guest_as_host(guest_id, current_user)
     except HostPermissionError as e:
         raise HTTPException(status_code=403, detail=str(e))
     except GuestNotFoundException:

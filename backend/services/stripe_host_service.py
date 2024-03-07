@@ -80,7 +80,6 @@ class StripeHostService:
                 f"Error creating Stripe account: {e}"
             )
         except Exception as e:
-            self._session.rollback()
             raise HostStripeAccountCreationException(f"Unknown Stripe error: {e}")
 
     def get_onboarding_link(self, host_id: int) -> str:

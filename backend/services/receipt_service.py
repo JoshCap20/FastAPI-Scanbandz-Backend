@@ -36,8 +36,12 @@ class ReceiptService:
             base_ticket_receipt
         )
 
-        self._session.add(entity)
-        self._session.commit()
+        try:
+            self._session.add(entity)
+            self._session.commit()
+        except:
+            self._session.rollback()
+            raise Exception("Failed to save ticket receipt")
 
         self.send_ticket_receipt(entity)
 
