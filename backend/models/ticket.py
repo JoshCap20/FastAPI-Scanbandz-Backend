@@ -53,12 +53,17 @@ class TicketPublic(BaseModel):
     price: Decimal
     registration_active: bool
     event_id: int
+    sold_out: bool = False
 
     @classmethod
     def from_ticket(cls, ticket: Ticket) -> "TicketPublic":
         """
         Create a TicketPublic instance from a Ticket model instance or dict.
         """
+        sold_out = (
+            ticket.max_quantity is not None
+            and ticket.tickets_sold >= ticket.max_quantity
+        )
         return cls(
             id=ticket.id,
             name=ticket.name,
@@ -66,4 +71,5 @@ class TicketPublic(BaseModel):
             price=ticket.price,
             registration_active=ticket.registration_active,
             event_id=ticket.event_id,
+            sold_out=sold_out,
         )
