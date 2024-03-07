@@ -19,10 +19,11 @@ def _engine_str() -> str:
 
 
 """Application-level SQLAlchemy database engine."""
-if MODE == "development":
-    engine = create_engine(_engine_str(), echo=True, pool_pre_ping=True)
-else:
-    engine = create_engine(_engine_str(), pool_pre_ping=True)
+# if MODE == "development":
+#     engine = create_engine(_engine_str(), echo=True, pool_pre_ping=True)
+# else:
+# Leaving so production server echos SQL queries for now
+engine = create_engine(_engine_str(), pool_pre_ping=True)
 
 
 def db_session():
