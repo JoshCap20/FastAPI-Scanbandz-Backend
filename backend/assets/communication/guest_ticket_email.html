@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            width: 80%;
+            margin: auto;
+            padding: 20px;
+            max-width: 600px;
+            background: white;
+        }
+
+        .header {
+            background-color: #000000;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+        }
+
+        .header img {
+            max-height: 50px;
+        }
+
+        .content {
+            margin-top: 20px;
+            line-height: 1.6;
+            font-size: 16px;
+        }
+
+        .footer {
+            margin-top: 20px;
+            font-size: 0.8em;
+            text-align: center;
+            color: #888;
+        }
+
+        .content a {
+            background-color: #000000;
+            color: white;
+            padding: 10px;
+            text-decoration: none;
+            border-radius: 5px;
+            display: block;
+            text-align: center;
+        }
+
+        .content a:hover {
+            background-color: #ff1744;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="https://v2.host.scanbandz.com/assets/real/img/logo-white.png" alt="Scanbandz Logo" />
+        </div>
+        <div class="content">
+            <h3>Your Ticket for {{event_name}}</h3>
+            <p>Event Date: {{ event_start_date }} to {{ event_end_date }}</p>
+            <p>Ticket Quantity: {{ ticket_quantity }}</p>
+            <p>Location: {{ location }}</p>
+            <br>
+            <p>Here's your ticket for an unforgettable experience. Click the button below to access your ticket and get
+                more details.</p>
+            <a href="{{ticket_link}}" class="button">Access Ticket</a>
+        </div>
+        <div class="footer">
+            Need help? Contact us at <a href="mailto:support@scanbandz.com">support@scanbandz.com</a>
+        </div>
+    </div>
+</body>
+
+</html>
