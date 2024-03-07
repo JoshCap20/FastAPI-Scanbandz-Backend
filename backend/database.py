@@ -4,6 +4,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
 from .settings.env import getenv
+from .settings.config import MODE
 
 
 def _engine_str() -> str:
@@ -17,8 +18,11 @@ def _engine_str() -> str:
     return f"{dialect}://{user}:{password}@{host}:{port}/{database}"
 
 
-engine = create_engine(_engine_str(), echo=True, pool_pre_ping=True)
 """Application-level SQLAlchemy database engine."""
+if MODE == "development":
+    engine = create_engine(_engine_str(), echo=True, pool_pre_ping=True)
+else:
+    engine = create_engine(_engine_str(), pool_pre_ping=True)
 
 
 def db_session():
