@@ -104,8 +104,8 @@ class StripeHostService:
         try:
             account_links = stripe.AccountLink.create(
                 account=host.stripe_id,
-                refresh_url="https://scanbandz.com",
-                return_url="https://scanbandz.com",
+                refresh_url="https://v2.host.scanbandz.com",
+                return_url="https://v2.host.scanbandz.com",
                 type="account_onboarding",
                 collection_options={"fields": "eventually_due"},
             )
@@ -136,8 +136,8 @@ class StripeHostService:
         try:
             account_links = stripe.AccountLink.create(
                 account=host.stripe_id,
-                refresh_url="https://scanbandz.com",
-                return_url="https://scanbandz.com",
+                refresh_url="https://v2.host.scanbandz.com",
+                return_url="https://v2.host.scanbandz.com",
                 type="account_update",
             )
         except stripe.InvalidRequestError as e:
