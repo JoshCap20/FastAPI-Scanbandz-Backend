@@ -77,6 +77,9 @@ class TicketPaymentBridge:
 
             if total_guests >= ticket_entity.max_quantity:
                 raise TicketRegistrationFullException()
+            
+            if ticket_entity.max_quantity - total_guests < guest.quantity:
+                raise TicketRegistrationFullException("Ticket max quantity exceeded.")
 
         ticket: Ticket = ticket_entity.to_model()
         event: Event = event_entity.to_model()
