@@ -74,7 +74,7 @@ def dashboard_stats(
 @api.get("/chart-data/revenue/{year}", tags=["Hosts"])
 def revenue_chart_data(
     year: int,
-    host_service: HostService = Depends(),
+    host_service: HostDashboardService = Depends(),
     current_user: Host = Depends(registered_user),
 ) -> JSONResponse:
     if year is None:
