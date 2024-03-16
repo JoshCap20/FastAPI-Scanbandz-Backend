@@ -8,3 +8,4 @@ from .stripe_host_service import StripeHostService
 from .communication_service import CommunicationService
 from .receipt_service import ReceiptService
 from .ticket_payment_bridge import TicketPaymentBridge
+from .host_dashboard_service import HostDashboardService

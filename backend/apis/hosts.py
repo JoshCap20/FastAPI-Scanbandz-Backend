@@ -8,7 +8,7 @@ from ..exceptions import (
     HostStripeAccountNotFoundException,
     HostAlreadyExistsError,
 )
-from ..services import HostService, StripeHostService
+from ..services import HostService, StripeHostService, HostDashboardService
 from ..utils.dev_only import dev_only
 
 api = APIRouter(prefix="/api/hosts")
@@ -61,10 +61,10 @@ def reset_password_request(
 def dashboard_stats(
     startDate: str,
     endDate: str,
-    host_service: HostService = Depends(),
+    host_service: HostDashboardService = Depends(),
     current_user: Host = Depends(registered_user),
 ) -> JSONResponse:
-    stats = host_service.get_dashboard_stats(current_user, startDate, endDate)
+    stats = host_service.get_dashboard_stats(current_user.id, startDate, endDate)
     return JSONResponse(
         status_code=status.HTTP_200_OK,
         content=stats,
