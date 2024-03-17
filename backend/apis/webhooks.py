@@ -1,7 +1,7 @@
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, status
 from ..services import StripePaymentService, StripeRefundService, ReceiptService
 
-from ..settings.config import STRIPE_ENDPOINT_SECRET
+from ..settings.config import STRIPE_ENDPOINT_SECRET, STRIPE_REFUND_ENDPOINT_SECRET
 
 api = APIRouter(prefix="/api/webhook")
 openapi_tags = {
@@ -22,7 +22,7 @@ async def process_refund_in_background(
     stripe_refund_service: StripeRefundService, payload: bytes, sig_header: str
 ):
     # Logic to process refund in the background
-    stripe_refund_service.handle_stripe_webhook_refund(payload, sig_header, STRIPE_ENDPOINT_SECRET)
+    stripe_refund_service.handle_stripe_webhook_refund(payload, sig_header, STRIPE_REFUND_ENDPOINT_SECRET)
 
 @api.post("/stripe-refunds", tags=["Webhook"])
 async def stripe_refunds_webhook(
