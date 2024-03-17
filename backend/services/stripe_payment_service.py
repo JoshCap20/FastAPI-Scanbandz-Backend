@@ -166,7 +166,7 @@ class StripePaymentService:
                             },
                             "unit_amount": fee,
                         },
-                        "quantity": 1,
+                        "quantity": quantity,
                     },
                 ],
                 mode="payment",
