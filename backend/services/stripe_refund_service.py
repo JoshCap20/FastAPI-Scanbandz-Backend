@@ -66,6 +66,7 @@ class StripeRefundService:
                 payment_intent=receipt.stripe_transaction_id,
                 amount=refund_amount,
                 reverse_transfer=True,
+                metadata={"receipt_id": str(receipt.id)},
             )
         except stripe.StripeError as e:
             StripeRefundException(f"Error creating refund: {e}")
