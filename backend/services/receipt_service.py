@@ -128,6 +128,19 @@ class ReceiptService:
         # Save it
         self._session.add(entity)
         self._session.commit()
+        
+        self.send_refund_receipt(entity)
+        
+    def send_refund_receipt(
+        self, refund_receipt: RefundReceiptEntity
+    ) -> None:
+        """
+        Sends a refund receipt to the guest.
+
+        Args:
+            refund_receipt (RefundReceiptEntity): The refund receipt to send.
+        """
+        self.communication_service.send_refund_receipt(refund_receipt)
 
     ### DEVELOPMENT ONLY ###
     def dev_all(self) -> list[TicketReceiptEntity]:

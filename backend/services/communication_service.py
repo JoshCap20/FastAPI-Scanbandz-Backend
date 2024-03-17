@@ -2,7 +2,7 @@
 Used to send emails and SMS messages to users.
 """
 
-from ..entities import TicketReceiptEntity
+from ..entities import TicketReceiptEntity, RefundReceiptEntity
 from ..models import Guest
 from ..communication import EmailClient
 from ..utils.email_template_render import render_email_template
@@ -124,4 +124,30 @@ class CommunicationService:
             email=guest.email,
             subject=f"Your Ticket for {guest.event.name}",
             message=EMAIL_TEMPLATE,
+        )
+        
+    def send_refund_receipt(self, receipt: RefundReceiptEntity):
+        """
+        Sends a refund receipt to the guest.
+
+        Args:
+            receipt (TicketReceipt): The ticket receipt to send.
+
+        Returns:
+            None
+        """
+        email: str = receipt.ticket_receipt.guest.email
+        event: str = receipt.ticket_receipt.event.name
+        refunded_amount: str = receipt.refund_amount
+
+        EMAIL_TEMPLATE = render_email_template(
+            template_name="refund_receipt_email.html",
+            variables={
+                "event_name": event,
+                "refund_amount": refunded_amount,
+                "refund_date": receipt.created_at.strftime("%B %d, %Y, %I:%M %p"),
+            },
+        )
+        self.send_html_email(
+            email=email, subject="Ticket Refund Receipt", message=EMAIL_TEMPLATE
         )
