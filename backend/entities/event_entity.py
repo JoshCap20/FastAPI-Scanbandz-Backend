@@ -22,6 +22,8 @@ class EventEntity(Base):
     location: Mapped[str] = mapped_column(String)
     start: Mapped[datetime] = mapped_column(DateTime)
     end: Mapped[datetime] = mapped_column(DateTime)
+    
+    image_url: Mapped[str] = mapped_column(String, nullable=True)
 
     # Relationships
     tickets: Mapped[list["TicketEntity"]] = relationship(
@@ -75,8 +77,10 @@ class EventEntity(Base):
             tickets=(
                 [TicketEntity.from_base_model(ticket) for ticket in model.tickets]
                 if model.tickets
-                else None
+                else []
             ),
+            guests=[],
+            ticket_receipts=[],
         )
 
     @classmethod

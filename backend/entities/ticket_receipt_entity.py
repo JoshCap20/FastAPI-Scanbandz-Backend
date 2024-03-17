@@ -10,6 +10,7 @@ from typing import Type
 
 from .base import Base
 from ..models import TicketReceipt, BaseTicketReceipt
+from .refund_receipt_entity import RefundReceiptEntity
 
 
 class TicketReceiptEntity(Base):
