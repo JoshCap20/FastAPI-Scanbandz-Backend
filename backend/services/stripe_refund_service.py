@@ -123,13 +123,11 @@ class StripeRefundService:
             raise StripeRefundException(f"Error verifying webhook signature: {e}")
         
         if event["type"] == "charge.refunded":
-            payment_intent = event["data"]["object"]
-            receipt_id = payment_intent["refunds"]["data"][0]["metadata"]["receipt_id"] # TODO: Handle this better (toplevel metadata)
-            amount = StripeRefundService._convert_to_dollars(payment_intent["amount_refunded"])
+            refund = event["data"]["object"]["refunds"]["data"][0] # Get most recent refund
+            receipt_id = refund["metadata"]["receipt_id"]
+            amount_in_cents = refund["amount"]
+            amount = StripeRefundService._convert_to_dollars(amount_in_cents)
             self.receipt_svc.create_refund_receipt(receipt_id, amount)
-            # TODO: Send refund email
-            # self.receipt_svc.create_refund_receipt(receipt, payment_intent["amount_refunded"])
-            # self.receipt_svc.send_refund_receipt(receipt)
         else:
             raise StripeRefundException(f"Unhandled event type: {event['type']}")
         
