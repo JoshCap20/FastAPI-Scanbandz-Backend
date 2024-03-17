@@ -145,7 +145,7 @@ class CommunicationService:
             variables={
                 "event_name": event,
                 "refund_amount": refunded_amount,
-                "refund_date": receipt.created_at.strftime("%B %d, %Y, %I:%M %p"),
+                "refund_date": receipt.created_at.strftime("%B %d, %Y"),
             },
         )
         self.send_html_email(
