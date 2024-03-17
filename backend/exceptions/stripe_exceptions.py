@@ -32,3 +32,14 @@ class HostStripeAccountCreationException(Exception):
 
     def __init__(self, msg: str = "Error creating host Stripe account"):
         super().__init__(msg)
+
+class StripeRefundException(Exception):
+    """
+    Exception raised for errors related to Stripe refunds.
+
+    Args:
+        msg (str): Optional. The error message associated with the exception.
+    """
+
+    def __init__(self, msg: str = "Stripe refund error"):
+        super().__init__(msg)

@@ -23,7 +23,8 @@ class BaseTicketReceipt(BaseModel):
     total_fee: Decimal  # added fee on top
     total_paid: Decimal  # total_price + total_fee
 
-    stripe_account_id: str
+    stripe_account_id: str # Stripe host's account identifier
+    stripe_transaction_id: str # Stripe payment_intent
 
 
 class TicketReceipt(BaseTicketReceipt):

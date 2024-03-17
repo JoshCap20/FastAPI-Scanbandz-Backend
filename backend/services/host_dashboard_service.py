@@ -3,12 +3,11 @@ This class is dedicated to providing summary statistics for the host dashboard.
 """
 from fastapi import Depends
 from sqlalchemy import and_, select, func
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from datetime import datetime
 
 from ..entities import EventEntity, TicketEntity, GuestEntity, TicketReceiptEntity
 from ..database import db_session
-from sqlalchemy.orm import joinedload
 
 class HostDashboardService:
     def __init__(self, session: Session = Depends(db_session)):
@@ -142,8 +141,8 @@ class HostDashboardService:
                 func.count(TicketReceiptEntity.id).label("total_tickets"),
             )
             .filter(
-                TicketReceiptEntity.event_id.in_(event_ids_for_host),
-                func.extract("year", TicketReceiptEntity.created_at) == year,
+                    TicketReceiptEntity.event_id.in_(select(event_ids_for_host)),
+                    func.extract("year", TicketReceiptEntity.created_at) == year,
             )
             .group_by("month")
         )
