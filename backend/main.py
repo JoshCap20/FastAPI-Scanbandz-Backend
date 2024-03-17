@@ -30,23 +30,9 @@ app = FastAPI(
 origins = [
     "https://v2.scanbandz.com",  # Guest Frontend
     "https://v2.host.scanbandz.com",  # Host Frontend
-    "https://scanbandz.com",  # Included for future domain use
+    "https://scanbandz.com",  # Guest Frontend
+    "https://host.scanbandz.com" # Host Frontend
 ]
-
-if MODE == "development":
-    origins = [
-        "https://v2.scanbandz.com",  # Guest Frontend
-        "https://v2.host.scanbandz.com",  # Host Frontend
-        "https://scanbandz.com",  # Included for future domain use
-        "http://localhost:4200",  # Local Host Frontend
-        "http://localhost:4201",  # Local Guest Frontend
-    ]
-else:
-    origins = [
-        "https://v2.scanbandz.com",  # Guest Frontend
-        "https://v2.host.scanbandz.com",  # Host Frontend
-        "https://scanbandz.com",  # Included for future domain use
-    ]
 
 # CORS Middleware
 app.add_middleware(
