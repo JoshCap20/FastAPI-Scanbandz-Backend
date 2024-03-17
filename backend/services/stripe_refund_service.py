@@ -85,3 +85,51 @@ class StripeRefundService:
             int: The amount in cents.
         """
         return int(amount * 100)
+    
+    @staticmethod
+    def _convert_to_dollars(amount: int) -> Decimal:
+        """
+        Convert the given amount from cents to dollars.
+
+        Args:
+            amount (int): The amount to convert.
+
+        Returns:
+            Decimal: The amount in dollars.
+        """
+        return Decimal(amount) / 100
+    
+    def handle_stripe_webhook_refund(
+        self, payload: bytes, sig_header: str, stripe_endpoint_secret: str
+    ) -> None:
+        """
+        Handles a Stripe webhook event for a refund.
+
+        Args:
+            payload (bytes): The payload of the webhook event.
+            sig_header (str): The signature header of the webhook event.
+            stripe_endpoint_secret (str): The secret key for the Stripe endpoint.
+
+        Raises:
+            StripeRefundException: If there is an error handling the webhook event.
+        """
+        try:
+            event = stripe.Webhook.construct_event(
+                payload, sig_header, stripe_endpoint_secret
+            )
+        except ValueError as e:
+            raise StripeRefundException(f"Error decoding webhook event: {e}")
+        except stripe.SignatureVerificationError as e:
+            raise StripeRefundException(f"Error verifying webhook signature: {e}")
+        
+        if event["type"] == "charge.refunded":
+            payment_intent = event["data"]["object"]
+            receipt_id = payment_intent["metadata"]["receipt_id"]
+            amount = StripeRefundService._convert_to_dollars(payment_intent["amount_refunded"])
+            self.receipt_svc.create_refund_receipt(receipt_id, amount)
+            # TODO: Send refund email
+            # self.receipt_svc.create_refund_receipt(receipt, payment_intent["amount_refunded"])
+            # self.receipt_svc.send_refund_receipt(receipt)
+        else:
+            raise StripeRefundException(f"Unhandled event type: {event['type']}")
+        

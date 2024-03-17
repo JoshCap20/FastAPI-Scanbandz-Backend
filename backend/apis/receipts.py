@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
 
 from .authentication import registered_user
-from ..models import Host, TicketReceipt, BaseRefundRequest
+from ..models import Host, TicketReceipt, BaseRefundRequest, RefundReceipt
 from ..services import StripeRefundService, ReceiptService
 from ..utils.dev_only import dev_only
 from ..exceptions import ReceiptNotFoundException, HostPermissionError, StripeRefundException
@@ -40,7 +40,16 @@ def get_receipt_by_id(
         
     return receipt
 
-@api.post("/refund", tags=["Receipts", "Stripe"])
+@api.get("/refunds/{id}", tags=["Receipts", "Refunds"], response_model=list[RefundReceipt])
+def get_refunds_by_receipt_id(
+    id: int,
+    receipt_service: ReceiptService = Depends(),
+    current_user: Host = Depends(registered_user),
+) -> list[RefundReceipt]:
+    # TODO: Add security to this endpoint
+    return receipt_service.get_refunds_by_receipt_id(id)
+
+@api.post("/refund", tags=["Receipts", "Refunds", "Stripe"])
 def refund_receipt(
     refund: BaseRefundRequest,
     current_user: Host = Depends(registered_user),

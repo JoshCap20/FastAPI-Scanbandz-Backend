@@ -1,5 +1,6 @@
-from ..entities import TicketReceiptEntity
-from ..models import BaseTicketReceipt, Host, TicketReceipt
+from decimal import Decimal
+from ..entities import TicketReceiptEntity, RefundReceiptEntity
+from ..models import BaseTicketReceipt, Host, TicketReceipt, RefundReceipt
 from ..database import db_session
 from ..services.communication_service import CommunicationService
 from ..exceptions import ReceiptNotFoundException
@@ -95,6 +96,38 @@ class ReceiptService:
             raise ReceiptNotFoundException()
         
         return entity.to_model()
+    
+    def get_refunds_by_receipt_id(self, receipt_id: int) -> list[RefundReceipt]:
+        """
+        Retrieves a list of refund receipts associated with a given receipt ID.
+
+        Args:
+            receipt_id (int): The ID of the receipt.
+
+        Returns:
+            list[RefundReceipt]: A list of RefundReceipt objects representing the refund receipts.
+        """
+        query = select(RefundReceiptEntity).where(
+            RefundReceiptEntity.ticket_receipt_id == receipt_id
+        )
+        entities: list[RefundReceiptEntity] = (
+            self._session.execute(query).scalars().all()
+        )
+        
+        return [entity.to_model() for entity in entities] if entities else []
+    
+    def create_refund_receipt(
+        self, receipt_id: int, refund_amount: Decimal
+    ):
+        # Create a RefundReceiptEntity
+        entity: RefundReceiptEntity = RefundReceiptEntity(
+            ticket_receipt_id=receipt_id,
+            refund_amount=refund_amount,
+        )
+        
+        # Save it
+        self._session.add(entity)
+        self._session.commit()
 
     ### DEVELOPMENT ONLY ###
     def dev_all(self) -> list[TicketReceiptEntity]:

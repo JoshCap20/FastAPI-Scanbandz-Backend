@@ -9,7 +9,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from typing import Type
 
 from .base import Base
-from ..models import TicketReceipt, BaseTicketReceipt
+from ..models import TicketReceipt, BaseTicketReceipt, RefundReceipt
 
 
 class RefundReceiptEntity(Base):
@@ -24,3 +24,16 @@ class RefundReceiptEntity(Base):
     )
     
     refund_amount: Mapped[Decimal] = mapped_column(Numeric(10, 2))
+    
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
+    )
+    
+    def to_model(self) -> RefundReceipt:
+        return RefundReceipt(
+            id=self.id,
+            ticket_receipt_id=self.ticket_receipt_id,
+            refund_amount=self.refund_amount,
+            created_at=self.created_at,
+        )
