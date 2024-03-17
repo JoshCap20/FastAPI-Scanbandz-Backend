@@ -124,7 +124,7 @@ class StripeRefundService:
         
         if event["type"] == "charge.refunded":
             payment_intent = event["data"]["object"]
-            receipt_id = payment_intent["metadata"]["receipt_id"]
+            receipt_id = payment_intent["refunds"]["data"][0]["metadata"]["receipt_id"] # TODO: Handle this better (toplevel metadata)
             amount = StripeRefundService._convert_to_dollars(payment_intent["amount_refunded"])
             self.receipt_svc.create_refund_receipt(receipt_id, amount)
             # TODO: Send refund email
