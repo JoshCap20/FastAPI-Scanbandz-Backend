@@ -1,15 +1,15 @@
 """Database engine and session dependency injection niceties."""
 
 from sqlalchemy import create_engine
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 
 from .settings.env import getenv
 from .settings.config import MODE
 
 
-def _engine_str() -> str:
+def _engine_str(dialect: str = "postgresql+psycopg2") -> str:
     """Helper function for reading settings from environment variables to produce connection string."""
-    dialect = "postgresql+psycopg2"
     user = getenv("POSTGRES_USER")
     password = getenv("POSTGRES_PASSWORD")
     host = getenv("POSTGRES_HOST")
