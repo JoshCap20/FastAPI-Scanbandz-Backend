@@ -17,6 +17,27 @@ def get_host_ticket_receipts(
 ) -> list[TicketReceipt]:
     return receipt_service.get_receipts_by_host(current_user)
 
+@api.get("/{id}", tags=["Receipts"], response_model=TicketReceipt)
+def get_receipt_by_id(
+    id: int,
+    receipt_service: ReceiptService = Depends(),
+    current_user: Host = Depends(registered_user),
+) -> TicketReceipt:
+    try:
+        receipt: TicketReceipt = receipt_service.get_receipt_by_id(id)
+    except:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Receipt not found",
+        )
+        
+    if receipt.host_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Host does not have permission to view this receipt",
+        )
+        
+    return receipt
 
 ### DEVELOPMENT ONLY ###
 @api.get("/dev-all", response_model=list[TicketReceipt], tags=["Dev"])
