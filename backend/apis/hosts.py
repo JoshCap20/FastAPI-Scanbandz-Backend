@@ -7,8 +7,10 @@ from ..exceptions import (
     HostStripeAccountCreationException,
     HostStripeAccountNotFoundException,
     HostAlreadyExistsError,
+    HostPermissionError,
+    StripeRefundException
 )
-from ..services import HostService, StripeHostService, HostDashboardService
+from ..services import HostService, StripeHostService, HostDashboardService, StripeRefundService
 from ..utils.dev_only import dev_only
 
 api = APIRouter(prefix="/api/hosts")
@@ -108,7 +110,7 @@ def revenue_chart_data(
 #     )
 
 
-@api.get("/stripe-onboarding", tags=["Hosts"])
+@api.get("/stripe-onboarding", tags=["Hosts", "Stripe"])
 def stripe_onboarding(
     stripe_host_service: StripeHostService = Depends(),
     current_user: Host = Depends(registered_user),
@@ -123,7 +125,7 @@ def stripe_onboarding(
     )
 
 
-@api.get("/stripe-update", tags=["Hosts"])
+@api.get("/stripe-update", tags=["Hosts", "Stripe"])
 def stripe_update(
     stripe_host_service: StripeHostService = Depends(),
     current_user: Host = Depends(registered_user),
@@ -138,7 +140,7 @@ def stripe_update(
     )
 
 
-@api.post("/stripe-status", tags=["Hosts"])
+@api.post("/stripe-status", tags=["Hosts", "Stripe"])
 def stripe_status(
     stripe_host_service: StripeHostService = Depends(),
     current_user: Host = Depends(registered_user),
@@ -153,7 +155,7 @@ def stripe_status(
     )
 
 
-@api.get("/stripe-link", tags=["Hosts"])
+@api.get("/stripe-link", tags=["Hosts", "Stripe"])
 def stripe_login(
     stripe_host_service: StripeHostService = Depends(),
     current_user: Host = Depends(registered_user),
@@ -165,6 +167,43 @@ def stripe_login(
     return JSONResponse(
         status_code=status.HTTP_200_OK,
         content={"url": login_url},
+    )
+    
+@api.post("/stripe-refund", tags=["Hosts", "Stripe"])
+def stripe_refund(
+    receipt_id: int,
+    amount: float,
+    stripe_refund_service: StripeRefundService = Depends(),
+    current_user: Host = Depends(registered_user),
+) -> JSONResponse:
+    """
+    Endpoint for processing a refund through Stripe.
+
+    Args:
+        receipt_id (int): The ID of the receipt for which the refund is being processed.
+        amount (float): The amount to be refunded.
+        stripe_refund_service (StripeRefundService): The service used for processing the refund. Defaults to Depends().
+        current_user (Host, optional): The currently logged-in host. Defaults to Depends(registered_user).
+
+    Returns:
+        JSONResponse: The response containing the refund amount.
+
+    Raises:
+        404 Error: If the host does not have a Stripe account or not attached to the receipt.
+        400 Error: If the refund amount is invalid.
+        403 Error: If the host does not have permission to refund the receipt.
+    """
+    try:
+        refund_amount: str = stripe_refund_service.create_refund_for_guest(host_id=current_user.id, receipt_id=receipt_id, amount=amount)
+    except HostStripeAccountNotFoundException as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except StripeRefundException as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except HostPermissionError as e:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={"amount": refund_amount},
     )
 
 

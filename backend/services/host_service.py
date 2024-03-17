@@ -64,7 +64,7 @@ class HostService:
 
         host.password = self._hash_password(host.password)
         host_entity: HostEntity = HostEntity.from_base_model(host)
-        # TODO: Add error handling for duplicate email or phone number
+        
         try:
             self._session.add(host_entity)
             self._session.commit()

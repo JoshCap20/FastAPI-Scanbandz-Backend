@@ -47,6 +47,12 @@ class TicketReceiptEntity(Base):
 
     # Stripe Details
     stripe_account_id: Mapped[str] = mapped_column(String)
+    stripe_transaction_id: Mapped[str] = mapped_column(String) # Use Stripe payment_intent ID
+
+    # Associated Refunds
+    refund_receipts: Mapped[list["RefundReceiptEntity"]] = relationship(
+        "RefundReceiptEntity", back_populates="ticket_receipt"
+    )
 
     # Metadata
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
@@ -69,6 +75,7 @@ class TicketReceiptEntity(Base):
             total_fee=model.total_fee,
             total_paid=model.total_paid,
             stripe_account_id=model.stripe_account_id,
+            stripe_transaction_id=model.stripe_transaction_id,
         )
 
     def to_model(self) -> TicketReceipt:
@@ -90,4 +97,5 @@ class TicketReceiptEntity(Base):
             stripe_account_id=self.stripe_account_id,
             created_at=self.created_at,
             updated_at=self.updated_at,
+            stripe_transaction_id=self.stripe_transaction_id,
         )

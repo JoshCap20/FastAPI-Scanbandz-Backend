@@ -2,7 +2,7 @@ from ..entities import TicketReceiptEntity
 from ..models import BaseTicketReceipt, Host, TicketReceipt
 from ..database import db_session
 from ..services.communication_service import CommunicationService
-
+from ..exceptions import ReceiptNotFoundException
 from sqlalchemy.orm import Session
 from fastapi import Depends
 from sqlalchemy import select
@@ -77,6 +77,24 @@ class ReceiptService:
         )
 
         return [entity.to_model() for entity in entities]
+    
+    def get_receipt_by_id(self, receipt_id: int) -> TicketReceipt:
+        """
+        Returns a ticket receipt by its ID.
+
+        Args:
+            receipt_id (int): The ID of the ticket receipt.
+
+        Returns:
+            TicketReceipt: The ticket receipt object.
+        """
+        query = select(TicketReceiptEntity).where(TicketReceiptEntity.id == receipt_id)
+        entity: TicketReceiptEntity = self._session.execute(query).scalar_one_or_none()
+        
+        if entity is None:
+            raise ReceiptNotFoundException()
+        
+        return entity.to_model()
 
     ### DEVELOPMENT ONLY ###
     def dev_all(self) -> list[TicketReceiptEntity]:

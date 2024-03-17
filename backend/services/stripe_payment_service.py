@@ -289,7 +289,7 @@ class StripePaymentService:
         Args:
             session: The checkout session object from the Stripe event.
         """
-        metadata = session["metadata"]
+        metadata: dict = session["metadata"]
 
         base_guest: BaseGuest = BaseGuest(
             first_name=metadata["guest_first_name"],
@@ -316,6 +316,8 @@ class StripePaymentService:
             guest_id: The ID of the guest who made the purchase.
         """
         metadata: dict = session["metadata"]
+        charge_id: str = session["payment_intent"]
+        
         total_price: Decimal = Decimal(metadata["unit_price"]) * Decimal(
             metadata["quantity"]
         )
@@ -334,6 +336,7 @@ class StripePaymentService:
             total_fee=total_fee,
             total_paid=self._convert_to_dollars(session["amount_total"]),
             stripe_account_id=metadata["host_stripe_id"],
+            stripe_transaction_id=charge_id
         )
 
         self.receipt_svc.generate_ticket_receipt(base_ticket_receipt)
