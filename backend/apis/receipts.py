@@ -2,9 +2,10 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
 
 from .authentication import registered_user
-from ..models import Host, TicketReceipt
-from ..services import HostService, ReceiptService
+from ..models import Host, TicketReceipt, BaseRefundRequest
+from ..services import StripeRefundService, ReceiptService
 from ..utils.dev_only import dev_only
+from ..exceptions import ReceiptNotFoundException, HostPermissionError, StripeRefundException
 
 api = APIRouter(prefix="/api/receipts")
 openapi_tags = {"name": "Receipts", "description": "Receipt management."}
@@ -38,6 +39,36 @@ def get_receipt_by_id(
         )
         
     return receipt
+
+@api.post("/refund", tags=["Receipts", "Stripe"])
+def refund_receipt(
+    refund: BaseRefundRequest,
+    current_user: Host = Depends(registered_user),
+    refund_svc: StripeRefundService = Depends(),
+) -> JSONResponse:
+    try:
+        refund_amount: str = refund_svc.create_refund_for_guest(
+            host_id=current_user.id, receipt_id=refund.receipt_id, amount=refund.amount
+        )
+    except ReceiptNotFoundException:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Receipt not found",
+        )
+    except HostPermissionError:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Host does not have permission to refund this receipt",
+        )
+    except StripeRefundException as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={"amount": str(refund_amount)},
+    )
 
 ### DEVELOPMENT ONLY ###
 @api.get("/dev-all", response_model=list[TicketReceipt], tags=["Dev"])
