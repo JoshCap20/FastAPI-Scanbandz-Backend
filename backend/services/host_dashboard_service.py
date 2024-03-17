@@ -90,13 +90,14 @@ class HostDashboardService:
         ]
         
     def _get_upcoming_events(self, host_id: int, limit: int = 5) -> list[dict]:
-        events = self._session.execute(
+        events_query = (
             select(EventEntity)
-            .options(joinedload(EventEntity.tickets))  # Load tickets relationship
             .filter(EventEntity.host_id == host_id, EventEntity.start > datetime.now())
             .order_by(EventEntity.start.asc())
             .limit(limit)
-        ).scalars().all()
+        )
+        
+        events = self._session.execute(events_query).scalars().unique().all()
 
         return [
             {
