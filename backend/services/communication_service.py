@@ -84,7 +84,7 @@ class CommunicationService:
                 "event_name": ticket_receipt_entity.event.name,
                 "ticket_name": ticket_receipt_entity.ticket.name,
                 "quantity": ticket_receipt_entity.quantity,
-                "total_paid": ticket_receipt_entity.total_price,
+                "total_paid": ticket_receipt_entity.total_paid,
                 "total_price": ticket_receipt_entity.total_price,
                 "total_fee": ticket_receipt_entity.total_fee,
                 "unit_price": ticket_receipt_entity.unit_price,
