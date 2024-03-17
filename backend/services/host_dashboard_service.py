@@ -143,7 +143,7 @@ class HostDashboardService:
             .filter(
                     TicketReceiptEntity.event_id.in_(select(event_ids_for_host)),
                     func.extract("year", TicketReceiptEntity.created_at) == year,
-                )
+            )
             .group_by("month")
         )
 
