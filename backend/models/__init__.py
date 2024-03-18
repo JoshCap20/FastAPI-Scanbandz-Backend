@@ -5,3 +5,4 @@ from .host import Host, BaseHost, HostIdentity, HostPublic
 from .authentication import LoginCredentials, ResetPasswordRequest
 from .ticket_receipt import TicketReceipt, BaseTicketReceipt
 from .refund_receipt import BaseRefundRequest, RefundReceipt
+from .donation_receipt import BaseDonationRequest

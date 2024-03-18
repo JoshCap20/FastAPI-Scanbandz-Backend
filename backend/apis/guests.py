@@ -3,8 +3,8 @@ from fastapi.responses import JSONResponse
 
 
 from .authentication import registered_user
-from ..models import Guest, BaseGuest, Host, UpdateGuest, GuestValidation
-from ..services import GuestService, TicketPaymentBridge
+from ..models import Guest, BaseGuest, Host, UpdateGuest, GuestValidation, BaseDonationRequest
+from ..services import GuestService, TicketPaymentBridge, StripePaymentService
 from ..utils.dev_only import dev_only
 from ..exceptions import (
     GuestNotFoundException,
@@ -65,8 +65,49 @@ def host_create_guest(
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+@api.post("/donate/{event_id}", tags=["Guests", "Stripe"])
+def guest_donation(
+    donation_request: BaseDonationRequest,
+    event_id: int,
+    stripe_payment_svc: StripePaymentService = Depends(),
+) -> JSONResponse:
+    """
+    Create a new guest for the specified event and ticket.
 
-@api.post("/{event_id}/{ticket_id}/create", tags=["Guests"])
+    Args:
+        guest (BaseGuest): The guest information.
+        event_id (int): The ID of the event.
+        stripe_payment_svc (StripePaymentService): The injected stripe payment service dependency.
+        
+    Returns:
+        JSONResponse: The response containing the checkout URL.
+
+    Raises:
+        HTTPException: If the event is not found, or the host does not have a Stripe account.
+    """
+    try:
+        checkout: str = stripe_payment_svc.create_donation_session(donation_request=donation_request, event_id=event_id)
+    except EventNotFoundException:
+        raise HTTPException(status_code=404, detail="Event not found")
+    except HostStripeAccountNotFoundException:
+        raise HTTPException(
+            status_code=400, detail="Host does not have a Stripe account"
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except StripeCheckoutSessionException:
+        raise HTTPException(
+            status_code=500, detail="Error creating Stripe checkout session"
+        )
+        
+    return JSONResponse(
+        status_code=status.HTTP_307_TEMPORARY_REDIRECT,
+        content={"url": checkout},
+    )
+    
+    
+
+@api.post("/{event_id}/{ticket_id}/create", tags=["Guests", "Stripe"])
 def create_guest(
     guest: BaseGuest,
     ticket_id: int,

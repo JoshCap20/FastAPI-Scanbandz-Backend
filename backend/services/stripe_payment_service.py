@@ -9,14 +9,16 @@ from decimal import Decimal
 
 from ..database import db_session
 from ..settings.config import STRIPE_SECRET_KEY
-from ..models import Ticket, Host, Event, BaseGuest, Guest, BaseTicketReceipt
+from ..models import Ticket, Host, Event, BaseGuest, Guest, BaseTicketReceipt, BaseDonationRequest
 from .ticket_service import TicketService
 from .guest_service import GuestService
 from .receipt_service import ReceiptService
 from ..exceptions import (
     StripeCheckoutSessionException,
     HostStripeAccountNotFoundException,
+    EventNotFoundException
 )
+from ..entities import DonationReceiptEntity, EventEntity
 
 
 class StripePaymentService:
@@ -37,6 +39,44 @@ class StripePaymentService:
         self.ticket_svc = ticket_svc
         self.guest_svc = guest_svc
         self.receipt_svc = receipt_svc
+        
+    def create_donation_session(
+        self, donation_request: BaseDonationRequest, event_id: int
+    ) -> str:
+        
+        event = self._session.query(EventEntity).filter(EventEntity.id == event_id).first()
+        
+        if event is None:
+            raise EventNotFoundException()
+        
+        host = event.host
+        
+        if host.stripe_id is None:
+            raise HostStripeAccountNotFoundException()
+        
+        # TODO: Make the success and cancel urls method work for both this and checkout
+        SUCCESS_URL: str = f"https://v2.scanbandz.com/payments/success?donation=true"
+        CANCEL_URL: str = f"https://v2.scanbandz.com/payments/failure?donation=true"
+        
+        return self._get_stripe_donation(
+            donation_amount=donation_request.donation_amount,
+            event=event,
+            host_stripe_id=host.stripe_id,
+            success_url=SUCCESS_URL,
+            cancel_url=CANCEL_URL,
+            metadata={
+                "guest_first_name": donation_request.first_name,
+                "guest_last_name": donation_request.last_name,
+                "guest_email": donation_request.email,
+                "guest_phone_number": donation_request.phone_number,
+                "event_id": event.id,
+                "host_id": host.id,
+                "host_stripe_id": host.stripe_id,
+                "type": "donation"
+            },
+        )
+
+        
 
     # TODO: Convert metadata to a model for validation
     def create_checkout_session(
@@ -85,6 +125,7 @@ class StripePaymentService:
                 "host_id": host.id,
                 "host_stripe_id": host.stripe_id,
                 "unit_price": ticket.price,
+                "type": "ticket"
             },
         )
 
@@ -184,6 +225,63 @@ class StripePaymentService:
             return checkout_session.url
         except stripe.StripeError as e:
             raise StripeCheckoutSessionException(str(e))
+        
+    def _get_stripe_donation(
+        self,
+        donation_amount: Decimal,
+        event: Event,
+        host_stripe_id: str,
+        success_url: str,
+        cancel_url: str,
+        metadata: dict,
+    ) -> str:
+        
+        price: int = self._convert_to_cents(donation_amount)
+        fee: int = self._get_donation_fee(donation_amount)
+        
+        metadata["fee"] = fee
+        
+        try:
+            checkout_session = stripe.checkout.Session.create(
+                line_items=[
+                    {
+                        "price_data": {
+                            "currency": "usd",
+                            "product_data": {
+                                "name": event.name,
+                                "description": "Donation",
+                            },
+                            "unit_amount": price,
+                        },
+                        "quantity": 1,
+                    },
+                    {
+                        "price_data": {
+                            "currency": "usd",
+                            "product_data": {
+                                "name": "Taxes & Fees",
+                            },
+                            "unit_amount": fee,
+                        },
+                        "quantity": 1,
+                    },
+                ],
+                mode="payment",
+                metadata=metadata,
+                success_url=success_url,
+                cancel_url=cancel_url,
+                payment_intent_data={
+                    "statement_descriptor": "Scanbz Event Ticket",
+                    "transfer_data": {
+                        "destination": host_stripe_id,
+                        "amount": price,
+                    },
+                },
+            )
+            return checkout_session.url
+        except stripe.StripeError as e:
+            raise StripeCheckoutSessionException(str(e))
+        
 
     def _get_ticket_fee(self, ticket: Ticket, quantity: int) -> int:
         """
@@ -200,6 +298,22 @@ class StripePaymentService:
         if fee < 150:
             return 150
         return fee
+    
+    def _get_donation_fee(self, amount: Decimal) -> int:
+        """
+        Get the fee in cents for the donation.
+
+        Args:
+            amount (Decimal): The amount of the donation.
+
+        Returns:
+            int: The fee in cents.
+        """
+        # Fee is 3.1% plus 40 cents
+        PERCENTAGE_FEE: Decimal = Decimal(0.031)
+        FIXED_FEE: Decimal = Decimal(0.40)
+        
+        return self._convert_to_cents(amount * PERCENTAGE_FEE + FIXED_FEE)
 
     def _convert_to_cents(self, amount: Decimal) -> int:
         """
@@ -211,6 +325,7 @@ class StripePaymentService:
         Returns:
             int: The amount in cents.
         """
+        amount = Decimal(amount)
         return int(amount * 100)
 
     def _convert_to_dollars(self, amount: int) -> Decimal:
@@ -223,6 +338,7 @@ class StripePaymentService:
         Returns:
             Decimal: The amount in dollars.
         """
+        amount = int(amount)
         return Decimal(amount) / 100
 
     def is_valid_signature(
@@ -278,9 +394,43 @@ class StripePaymentService:
         # Successfully constructed event
         if event["type"] == "checkout.session.completed":
             session = event["data"]["object"]
-            self._fulfill_ticket_purchase(session)
+            
+            if session["metadata"]["type"] == "donation":
+                return self._fulfill_donation(session)
+            else:
+                return self._fulfill_ticket_purchase(session)
 
         return None
+    
+    def _fulfill_donation(self, session: dict) -> None:
+        # Create a DonationReceiptEntity
+        metadata: dict = session["metadata"]
+        total_price: Decimal = self._convert_to_dollars(session["amount_total"])
+        fee: Decimal = self._convert_to_dollars(metadata["fee"])
+        
+        donation_receipt_entity = DonationReceiptEntity(
+            first_name=metadata["guest_first_name"],
+            last_name=metadata["guest_last_name"],
+            email=metadata["guest_email"],
+            phone=metadata["guest_phone_number"],
+            event_id=metadata["event_id"],
+            host_id=metadata["host_id"],
+            total_price=total_price - fee,
+            total_fee=fee,
+            total_paid=total_price,
+            stripe_account_id=metadata["host_stripe_id"],
+            stripe_transaction_id=session["payment_intent"]
+        )
+        
+        try:
+            self._session.add(donation_receipt_entity)
+            self._session.commit()
+        except Exception as e:
+            self._session.rollback()
+            raise e
+        
+        # TODO: Send donation email
+        
 
     def _fulfill_ticket_purchase(self, session: dict) -> None:
         """
