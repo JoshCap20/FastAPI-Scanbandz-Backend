@@ -6,7 +6,7 @@ from ..exceptions import (
 )
 from ..models import Event, BaseEvent, Host, UpdateEvent
 from ..database import db_session
-from ..utils.image_storage import upload_to_azure
+from ..utils.image_storage import upload_to_azure, remove_from_azure
 
 from typing import BinaryIO, Sequence
 from sqlalchemy import select
@@ -298,3 +298,35 @@ class EventService:
         return upload_to_azure(
             file=file, filename=filename, container_name="event-images"
         )
+        
+    def handle_event_image_delete(self, event_id: int, host_id: int) -> None:
+        """
+        Delete an event image.
+
+        Args:
+            event_id (int): The ID of the event to update.
+            host_id (int): The ID of the host.
+
+        Returns:
+            None
+        """
+        try:
+            entity: EventEntity = self._session.get(EventEntity, event_id)
+        except EventNotFoundException:
+            raise EventNotFoundException(event_id)
+
+        if entity.host.id != host_id:
+            raise HostPermissionError()
+
+        if entity.image_url:
+            self.__delete_event_image(entity.image_url)
+            entity.image_url = None
+
+            try:
+                self._session.commit()
+            except:
+                self._session.rollback()
+                raise Exception("An error occurred while deleting the event image.")
+        
+    def __delete_event_image(self, filename: str) -> None:
+        remove_from_azure(filename, "event-images")

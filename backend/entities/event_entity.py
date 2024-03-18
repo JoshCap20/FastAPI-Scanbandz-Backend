@@ -126,6 +126,7 @@ class EventEntity(Base):
             private_key=self.private_key,
             created_at=self.created_at,
             updated_at=self.updated_at,
+            image_url=self.image_url if self.image_url else None,
         )
 
     def to_public_model(self) -> EventPublic:

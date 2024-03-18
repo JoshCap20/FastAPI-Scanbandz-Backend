@@ -91,4 +91,5 @@ class EventPublic(BaseModel):
             tickets=tickets,
             host=(HostPublic.from_host(event.host) if event.host else None),
             public_key=event.public_key,
+            image_url=event.image_url if event.image_url else None,
         )
