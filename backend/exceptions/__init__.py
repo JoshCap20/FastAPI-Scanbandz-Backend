@@ -25,3 +25,6 @@ from .stripe_exceptions import (
 from .receipt_exceptions import (
     ReceiptNotFoundException
 )
+from .media_exceptions import (
+    InvalidMediaTypeException
+)

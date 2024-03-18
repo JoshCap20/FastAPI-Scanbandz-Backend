@@ -38,6 +38,8 @@ def registered_user(
             raise HTTPException(status_code=401, detail="Token expired")
         except jwt.InvalidTokenError:
             raise HTTPException(status_code=401, detail="Invalid token")
+        except HostNotFoundException:
+            raise HTTPException(status_code=401, detail="User not found")
     raise HTTPException(status_code=401, detail="Unauthorized")
 
 

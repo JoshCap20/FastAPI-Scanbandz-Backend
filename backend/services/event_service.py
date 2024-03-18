@@ -1,12 +1,17 @@
 from ..entities.event_entity import EventEntity, TicketEntity
-from ..exceptions import EventNotFoundException, HostPermissionError
+from ..exceptions import (
+    EventNotFoundException,
+    HostPermissionError,
+    InvalidMediaTypeException,
+)
 from ..models import Event, BaseEvent, Host, UpdateEvent
 from ..database import db_session
+from ..utils.image_storage import upload_to_azure
 
-from typing import Sequence
-from sqlalchemy.orm import Session
-from fastapi import Depends
+from typing import BinaryIO, Sequence
 from sqlalchemy import select
+from sqlalchemy.orm import Session
+from fastapi import Depends, UploadFile
 
 
 class EventService:
@@ -110,7 +115,7 @@ class EventService:
         except:
             self._session.rollback()
             raise Exception("An error occurred while creating the event.")
-        
+
         return event_entity.to_model()
 
     def update(self, id: int, event: UpdateEvent, host: Host) -> Event:
@@ -218,3 +223,78 @@ class EventService:
         query = select(EventEntity).where(EventEntity.host_id == host.id)
         entities: Sequence[EventEntity] = self._session.scalars(query).all()
         return [entity.to_model() for entity in entities] if entities else []
+
+    ################################
+    #### EVENT IMAGE FUNCTIONS #####
+    ################################
+
+    def handle_event_image_upload(
+        self, file: UploadFile, event_id: int, host_id: int
+    ) -> str:
+        """
+        Handle the upload of an event image.
+
+        Args:
+            file (UploadFile): The image file to be uploaded.
+            event_id (int): The ID of the event to update.
+            host (Host): The host logged in.
+
+        Returns:
+            str: The URL of the uploaded image.
+        """
+        try:
+            entity: EventEntity = self._session.get(EventEntity, event_id)
+        except EventNotFoundException:
+            raise EventNotFoundException(event_id)
+
+        if entity.host.id != host_id:
+            raise HostPermissionError()
+
+        media_type: str = file.content_type
+
+        if media_type.split("/")[0] != "image":
+            raise InvalidMediaTypeException("Only image files are allowed.")
+        
+        if media_type.split("/")[1] not in ["jpeg", "png", "gif", "webp"]:
+            raise InvalidMediaTypeException("Only JPEG, PNG, GIF, and WebP files are allowed.")
+
+        filename: str = f"beta-{event_id}-{host_id}.{media_type.split('/')[1]}"
+
+        image_url: str = self.__upload_event_image(file=file.file, filename=filename)
+        return self.__set_event_image(entity, image_url)
+
+    def __set_event_image(self, event_entity: EventEntity, image_url: str) -> str:
+        """
+        Set the image URL for an event.
+
+        Args:
+            event_entity (EventEntity): The event to update.
+            image_url (str): The URL of the image to be set.
+
+        Returns:
+            str: The URL of the updated image.
+        """
+        event_entity.image_url = image_url
+
+        try:
+            self._session.commit()
+        except:
+            self._session.rollback()
+            raise Exception("An error occurred while setting the event image.")
+
+        return image_url
+
+    def __upload_event_image(self, file: BinaryIO, filename: str) -> str:
+        """
+        Upload an image to storage.
+
+        Args:
+            file (BinaryIO): The image file to be uploaded.
+            filename (str): The name of the file.
+
+        Returns:
+            str: The URL of the uploaded image.
+        """
+        return upload_to_azure(
+            file=file, filename=filename, container_name="event-images"
+        )

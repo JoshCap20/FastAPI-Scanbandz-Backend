@@ -1,11 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, status, Query
 from fastapi.responses import JSONResponse
 
 from .authentication import registered_user
 from ..models import Event, BaseEvent, Host, EventPublic, UpdateEvent
-from ..services import EventService
+from ..services import EventService, verify_file_size
 from ..utils.dev_only import dev_only
-from ..exceptions import EventNotFoundException, HostPermissionError
+from ..exceptions import EventNotFoundException, HostPermissionError, HostNotFoundException, InvalidMediaTypeException
 
 api = APIRouter(prefix="/api/events")
 openapi_tags = {
@@ -159,6 +159,22 @@ def get_host_event(
         return event
     except EventNotFoundException:
         raise HTTPException(status_code=404, detail="Event not found")
+    
+    
+@api.post("/image-upload/{event_id}", tags=["Events", "Media"])
+async def event_image_upload(event_id: int, file: UploadFile, event_service: EventService = Depends(), verified_file: UploadFile = Depends(verify_file_size), current_user: Host = Depends(registered_user)) -> dict:
+    # TODO: Handle errors for upload, I/O, storage, etc.
+    try:
+        link: str = event_service.handle_event_image_upload(file=file, event_id=event_id, host_id=current_user.id)
+    except InvalidMediaTypeException as e:
+        raise HTTPException(status_code=415, detail=str(e))
+    except HostNotFoundException:
+        raise HTTPException(status_code=404, detail="Host not found")
+    except EventNotFoundException:
+        raise HTTPException(status_code=404, detail="Event not found")
+    except HostPermissionError:
+        raise HTTPException(status_code=403, detail="Invalid permission to access event")
+    return {"url": link}
 
 
 @api.get("/list", response_model=list[Event], tags=["Events"])
