@@ -176,6 +176,17 @@ async def event_image_upload(event_id: int, file: UploadFile, event_service: Eve
         raise HTTPException(status_code=403, detail="Invalid permission to access event")
     return {"url": link}
 
+@api.delete("/image-delete/{event_id}", tags=["Events", "Media"])
+def event_image_delete(event_id: int, event_service: EventService = Depends(), current_user: Host = Depends(registered_user)) -> dict:
+    try:
+        event_service.handle_event_image_delete(event_id=event_id, host_id=current_user.id)
+    except HostNotFoundException:
+        raise HTTPException(status_code=404, detail="Host not found")
+    except EventNotFoundException:
+        raise HTTPException(status_code=404, detail="Event not found")
+    except HostPermissionError:
+        raise HTTPException(status_code=403, detail="Invalid permission to access event")
+    return {"message": "Image deleted successfully"}
 
 @api.get("/list", response_model=list[Event], tags=["Events"])
 @dev_only
