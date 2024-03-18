@@ -49,6 +49,9 @@ class Event(BaseEvent, EventIdentity):
     # Metadata
     created_at: datetime | None = None
     updated_at: datetime | None = None
+    
+    # Additional
+    image_url: str | None = None
 
 
 # Public version of the Event model excluding sensitive and unnecessary fields
@@ -62,6 +65,7 @@ class EventPublic(BaseModel):
     host: HostPublic | None = None
     public_key: str | None = None
     tickets: list[TicketPublic] | None = None
+    image_url: str | None = None
 
     @classmethod
     def from_event(cls, event: Event) -> "EventPublic":

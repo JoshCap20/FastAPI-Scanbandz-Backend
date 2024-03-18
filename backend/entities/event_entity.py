@@ -141,4 +141,5 @@ class EventEntity(Base):
             end=self.end,
             host=self.host.to_public_model(),
             public_key=self.public_key,
+            image_url=self.image_url if self.image_url else None,
         )
