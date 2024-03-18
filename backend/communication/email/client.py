@@ -3,7 +3,7 @@ from ..interfaces.email_obj import EmailCommunicationClient
 from .services.azure import AzureEmailCommunicationClient
 
 
-class EmailClient(EmailCommunicationClient):
+class EmailInterface(EmailCommunicationClient):
     client = AzureEmailCommunicationClient
 
     @classmethod

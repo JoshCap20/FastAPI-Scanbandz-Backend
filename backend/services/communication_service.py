@@ -4,7 +4,7 @@ Used to send emails and SMS messages to users.
 
 from ..entities import TicketReceiptEntity, RefundReceiptEntity
 from ..models import Guest
-from ..communication import EmailClient
+from ..communication import EmailInterface
 from ..utils.email_template_render import render_email_template
 
 
@@ -28,7 +28,7 @@ class CommunicationService:
         Returns:
             None
         """
-        EmailClient.send(
+        EmailInterface.send(
             to_email=email, subject=subject, message=message, mime_type="text/html"
         )
 
@@ -44,7 +44,7 @@ class CommunicationService:
         Returns:
             None
         """
-        EmailClient.send(to_email=email, subject=subject, message=message)
+        EmailInterface.send(to_email=email, subject=subject, message=message)
 
     def send_sms(self, phone_number: str, message: str) -> None:
         """

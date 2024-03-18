@@ -1,11 +1,11 @@
 from azure.communication.email import EmailClient
 
 from ....exceptions.communication_exceptions import EmailFailureException
-from ....settings.env import getenv
+from ....settings.config import AZURE_EMAIL_CONNECTION_KEY
 
 
 class AzureEmailCommunicationClient:
-    client: EmailClient = EmailClient.from_connection_string(getenv("AZURE_EMAIL_CONNECTION_KEY"))  # type: ignore
+    client: EmailClient = EmailClient.from_connection_string(AZURE_EMAIL_CONNECTION_KEY)
 
     @classmethod
     def send_email(
