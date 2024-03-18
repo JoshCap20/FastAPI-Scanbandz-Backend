@@ -429,7 +429,7 @@ class StripePaymentService:
             self._session.rollback()
             raise e
         
-        # TODO: Send donation email
+        self.receipt_svc.send_donation_receipt(donation_receipt_entity)
         
 
     def _fulfill_ticket_purchase(self, session: dict) -> None:

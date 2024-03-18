@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            width: 80%;
+            margin: auto;
+            padding: 20px;
+            max-width: 600px;
+            background: white;
+        }
+
+        .header {
+            background-color: #000000;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+        }
+
+        .header img {
+            max-height: 50px;
+        }
+
+        .content {
+            margin-top: 20px;
+            line-height: 1.6;
+            font-size: 16px;
+        }
+
+        .footer {
+            margin-top: 20px;
+            font-size: 0.8em;
+            text-align: center;
+            color: #888;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="https://v2.host.scanbandz.com/assets/real/img/logo-white.png" alt="Scanbandz Logo" />
+        </div>
+        <div class="content">
+            <h1>Donation Receipt</h1>
+            <p>Dear {{donor_name}},</p>
+            <p>Thank you for your generous donation. This receipt confirms that you have donated to the event
+                <strong>{{event_name}}</strong> hosted by {{host_name}}.</p>
+
+            <h2>Donation Details:</h2>
+            <p><strong>Date:</strong> {{donation_date}}<br>
+                <strong>Total Donation:</strong> ${{donated_amount}}<br>
+            </p>
+
+            <h2>Donor Information:</h2>
+            <p><strong>Name:</strong> {{donor_name}}<br>
+                <strong>Phone:</strong> {{donor_phone}}<br>
+                <strong>Email:</strong> {{donor_email}}<br>
+            </p>
+
+            <h2>Recipient Information:</h2>
+            <p><strong>Host:</strong> {{host_name}}<br>
+                <strong>Email:</strong> {{host_email}}<br>
+            </p>
+
+            <p>Your donation is very much appreciated and will be used to support the event's cause. Please keep this receipt
+                for your records.</p>
+            <p><em>Note: No goods or services were provided in exchange for this donation.</em></p>
+        </div>
+        <div class="footer">
+            Need help? Contact us at <a href="mailto:support@scanbandz.com">support@scanbandz.com</a>
+        </div>
+    </div>
+</body>
+
+</html>

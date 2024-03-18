@@ -2,7 +2,7 @@
 Used to send emails and SMS messages to users.
 """
 
-from ..entities import TicketReceiptEntity, RefundReceiptEntity
+from ..entities import TicketReceiptEntity, RefundReceiptEntity, DonationReceiptEntity, HostEntity
 from ..models import Guest
 from ..communication import EmailInterface
 from ..utils.email_template_render import render_email_template
@@ -150,4 +150,36 @@ class CommunicationService:
         )
         self.send_html_email(
             email=email, subject="Ticket Refund Receipt", message=EMAIL_TEMPLATE
+        )
+        
+    def send_donation_receipt(self, donation_receipt: DonationReceiptEntity):
+        """
+        Sends a donation receipt to the guest.
+
+        Args:
+            donation_receipt (DonationReceipt): The donation receipt to send.
+
+        Returns:
+            None
+        """
+        email: str = donation_receipt.email
+        event: str = donation_receipt.event.name
+        host: HostEntity = donation_receipt.host
+        donated_amount: str = donation_receipt.total_paid
+
+        EMAIL_TEMPLATE = render_email_template(
+            template_name="donation_receipt_email.html",
+            variables={
+                "donor_name": f"{donation_receipt.first_name} {donation_receipt.last_name}",
+                "donor_phone": donation_receipt.phone,
+                "donor_email": donation_receipt.email,
+                "host_name": f"{host.first_name} {host.last_name}",
+                "host_email": host.email,
+                "event_name": event,
+                "donated_amount": donated_amount,
+                "donation_date": donation_receipt.created_at.strftime("%B %d, %Y"),
+            },
+        )
+        self.send_html_email(
+            email=email, subject="Donation Receipt", message=EMAIL_TEMPLATE
         )

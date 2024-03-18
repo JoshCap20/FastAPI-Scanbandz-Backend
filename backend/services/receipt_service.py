@@ -1,5 +1,5 @@
 from decimal import Decimal
-from ..entities import TicketReceiptEntity, RefundReceiptEntity
+from ..entities import TicketReceiptEntity, RefundReceiptEntity, DonationReceiptEntity
 from ..models import BaseTicketReceipt, Host, TicketReceipt, RefundReceipt
 from ..database import db_session
 from ..services.communication_service import CommunicationService
@@ -141,6 +141,17 @@ class ReceiptService:
             refund_receipt (RefundReceiptEntity): The refund receipt to send.
         """
         self.communication_service.send_refund_receipt(refund_receipt)
+        
+    def send_donation_receipt(
+        self, donation_receipt: DonationReceiptEntity
+    ):
+        """
+        Sends a donation receipt to the guest.
+
+        Args:
+            donation_receipt (DonationReceiptEntity): The donation receipt to send.
+        """
+        self.communication_service.send_donation_receipt(donation_receipt)
 
     ### DEVELOPMENT ONLY ###
     def dev_all(self) -> list[TicketReceiptEntity]:
