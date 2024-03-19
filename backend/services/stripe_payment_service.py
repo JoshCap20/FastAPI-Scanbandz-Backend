@@ -54,9 +54,8 @@ class StripePaymentService:
         if host.stripe_id is None:
             raise HostStripeAccountNotFoundException()
         
-        # TODO: Make the success and cancel urls method work for both this and checkout
-        SUCCESS_URL: str = f"https://v2.scanbandz.com/payments/success?donation=true"
-        CANCEL_URL: str = f"https://v2.scanbandz.com/payments/failure?donation=true"
+        SUCCESS_URL: str = self._get_success_link(event)
+        CANCEL_URL: str = self._get_cancel_link(event)
         
         return self._get_stripe_donation(
             donation_amount=donation_request.donation_amount,
@@ -104,7 +103,7 @@ class StripePaymentService:
         if host.stripe_id is None:
             raise HostStripeAccountNotFoundException()
 
-        SUCCESS_URL: str = self._get_success_link(event, ticket, guest.quantity)
+        SUCCESS_URL: str = self._get_success_link(event)
         CANCEL_URL: str = self._get_cancel_link(event)
 
         return self._get_stripe_checkout(
@@ -129,7 +128,7 @@ class StripePaymentService:
             },
         )
 
-    def _get_success_link(self, event: Event, ticket: Ticket, quantity: int) -> str:
+    def _get_success_link(self, event: Event) -> str:
         """
         Get the success link for the checkout session.
 
