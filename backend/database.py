@@ -1,8 +1,7 @@
 """Database engine and session dependency injection niceties."""
 
 from sqlalchemy import create_engine
-from sqlalchemy.orm import Session, sessionmaker
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.orm import Session
 
 from .settings.env import getenv
 from .settings.config import MODE
