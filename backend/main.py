@@ -17,7 +17,7 @@ redoc_url = None if MODE == "production" else "/redoc"
 # Metadata to improve the usefulness of OpenAPI Docs /docs API Explorer
 app = FastAPI(
     title="Scanbandz v2 API",
-    version="0.2",
+    version="1.0.0",
     description=description,
     openapi_tags=[
         webhooks.openapi_tags,
