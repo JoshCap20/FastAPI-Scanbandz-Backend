@@ -10,6 +10,10 @@ description = """
 This is the core v2 Scanbandz API. It is a RESTful API that provides endpoints for managing events, tickets, guests, and receipts. It also provides endpoints for user authentication and webhooks for handling Stripe payments. The API is designed to be used by both the host and guest frontends. 
 """
 
+# Disable OpenAPI and Redoc in production
+docs_url = None if MODE == "production" else "/docs"
+redoc_url = None if MODE == "production" else "/redoc"
+
 # Metadata to improve the usefulness of OpenAPI Docs /docs API Explorer
 app = FastAPI(
     title="Scanbandz v2 API",
@@ -27,12 +31,18 @@ app = FastAPI(
 )
 
 # Allowed origins for CORS
-origins = [
-    "https://v2.scanbandz.com",  # Guest Frontend
-    "https://v2.host.scanbandz.com",  # Host Frontend
-    "https://scanbandz.com",  # Guest Frontend
-    "https://host.scanbandz.com" # Host Frontend
-]
+if MODE == "development":
+    origins = [
+        "http://localhost:4200",
+        "http://localhost:8001",
+    ]
+else:
+    origins = [
+        "https://v2.scanbandz.com",
+        "https://v2.host.scanbandz.com",
+        "https://scanbandz.com",
+        "https://host.scanbandz.com",
+    ]
 
 # CORS Middleware
 app.add_middleware(
