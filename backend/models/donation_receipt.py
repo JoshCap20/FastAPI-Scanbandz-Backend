@@ -10,4 +10,4 @@ class BaseDonationRequest(BaseModel):
     phone_number: str | None = None  # TODO: Add phone number class
     email: EmailStr | None = None
     
-    donation_amount: Decimal | None = None
+    donation_amount: Decimal

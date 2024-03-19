@@ -141,7 +141,7 @@ class StripePaymentService:
         Returns:
             str: The success link for the checkout session.
         """
-        return f"https://v2.scanbandz.com/payments/success?event={event.name}"
+        return f"https://v2.scanbandz.com/payments/success?event={event.public_key}"
 
     def _get_cancel_link(self, event: Event) -> str:
         """
@@ -153,7 +153,7 @@ class StripePaymentService:
         Returns:
             str: The cancel link for the checkout session.
         """
-        return f"https://v2.scanbandz.com/payments/failure?event={event.name}"
+        return f"https://v2.scanbandz.com/payments/failure?event={event.public_key}"
 
     def _get_stripe_checkout(
         self,
