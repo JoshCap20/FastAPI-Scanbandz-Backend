@@ -95,7 +95,7 @@ class TicketReceiptEntity(Base):
             total_price=self.total_price,
             total_fee=self.total_fee,
             total_paid=self.total_paid,
-            stripe_account_id=self.stripe_account_id,
+            stripe_account_id=self.stripe_account_id if self.stripe_account_id else "test", # Temp workaround
             created_at=self.created_at,
             updated_at=self.updated_at,
             stripe_transaction_id=self.stripe_transaction_id,
