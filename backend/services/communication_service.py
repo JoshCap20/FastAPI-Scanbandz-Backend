@@ -105,7 +105,7 @@ class CommunicationService:
             None
         """
         ticket_link: str = (
-            f"https://v2.scanbandz.com/ticket?guest={guest.public_key}&event={guest.event.public_key}"
+            f"https://scanbandz.com/ticket?guest={guest.public_key}&event={guest.event.public_key}"
         )
 
         EMAIL_TEMPLATE = render_email_template(
