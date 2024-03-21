@@ -36,7 +36,7 @@ class HostDashboardService:
         stats = self._session.execute(
             select(
                 # func.sum(TicketReceiptEntity.quantity).label("tickets_sold_count"),
-                func.sum(TicketReceiptEntity.total_paid).label("revenue")
+                func.sum(TicketReceiptEntity.total_price).label("revenue")
             ).select_from(EventEntity)
             .join(EventEntity.ticket_receipts)
             .where(
