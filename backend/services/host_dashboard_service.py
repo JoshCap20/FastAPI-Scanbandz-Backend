@@ -168,7 +168,7 @@ class HostDashboardService:
             self._session.query(
                 func.extract("month", TicketReceiptEntity.created_at).label("month"),
                 func.sum(TicketReceiptEntity.total_price).label("total_revenue"),
-                func.count(TicketReceiptEntity.id).label("total_tickets"),
+                func.sum(TicketReceiptEntity.quantity).label("total_tickets"),
             )
             .filter(
                     TicketReceiptEntity.event_id.in_(select(event_ids_for_host)),
