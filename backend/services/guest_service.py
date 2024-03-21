@@ -282,13 +282,14 @@ class GuestService:
         base_receipt: BaseTicketReceipt = BaseTicketReceipt(
             guest_id=guest.id,
             event_id=event.id,
+            ticket_id=guest.ticket.id,
             host_id=event.host.id,
             quantity=guest.quantity,
             unit_price=0,
             total_price=0,
             total_fee=0,
             total_paid=0,
-            stripe_account_id="", # TODO: Should we add this?
+            stripe_account_id=event.host.stripe_id,
             stripe_transaction_id="",
         )
         

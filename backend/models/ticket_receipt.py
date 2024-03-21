@@ -38,31 +38,31 @@ class TicketReceipt(BaseTicketReceipt):
 
     @validator("quantity")
     def quantity_must_be_positive(cls, v: int):
-        if v <= 0:
+        if v < 0:
             raise ValueError("quantity must be positive")
         return v
 
     @validator("total_price")
     def total_price_must_be_positive(cls, v: Decimal):
-        if v <= 0:
+        if v < 0:
             raise ValueError("total_price must be positive")
         return v
 
     @validator("total_fee")
     def total_fee_must_be_positive(cls, v: Decimal):
-        if v <= 0:
+        if v < 0:
             raise ValueError("total_fee must be positive")
         return v
 
     @validator("total_paid")
     def total_paid_must_be_positive(cls, v: Decimal):
-        if v <= 0:
+        if v < 0:
             raise ValueError("total_paid must be positive")
         return v
 
     @validator("unit_price")
     def unit_price_must_be_positive(cls, v: Decimal):
-        if v <= 0:
+        if v < 0:
             raise ValueError("unit_price must be positive")
         return v
 
