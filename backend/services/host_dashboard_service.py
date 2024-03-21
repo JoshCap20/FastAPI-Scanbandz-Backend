@@ -35,7 +35,7 @@ class HostDashboardService:
 
         stats = self._session.execute(
             select(
-                func.sum(TicketReceiptEntity.quantity).label("tickets_sold_count"),
+                # func.sum(TicketReceiptEntity.quantity).label("tickets_sold_count"),
                 func.sum(TicketReceiptEntity.total_paid).label("revenue")
             ).select_from(EventEntity)
             .join(EventEntity.ticket_receipts)
@@ -49,14 +49,15 @@ class HostDashboardService:
         ).one()
 
 
-        guests_attended_count = self._get_guests_attended_count(host_id, start_date, end_date)
+        guest_stats = self._get_guests_stats(host_id, start_date, end_date)
         top_events = self._get_top_events(host_id, start_date, end_date)
         upcoming_events = self._get_upcoming_events(host_id)
 
         return {
             "events_count": events_count or 0,
-            "guests_attended": guests_attended_count,
-            "tickets_sold": stats.tickets_sold_count,
+            "guests_attended": guest_stats["guests_attended_count"],
+            # "tickets_sold": stats.tickets_sold_count,
+            "tickets_sold": guest_stats["guests_invited_count"],
             "revenue": str(stats.revenue),
             "top_events": top_events,
             "upcoming_events": upcoming_events,
@@ -64,9 +65,13 @@ class HostDashboardService:
             "end_date": end_date.strftime("%m/%d/%Y"),
         }
 
-    def _get_guests_attended_count(self, host_id: int, start_date: datetime, end_date: datetime) -> int:
-        guests_attended_count = self._session.execute(
-            select(func.sum(GuestEntity.used_quantity))
+
+    def _get_guests_stats(self, host_id: int, start_date: datetime, end_date: datetime) -> dict:
+        result = self._session.execute(
+            select(
+                func.sum(GuestEntity.used_quantity).label("guests_attended"),
+                func.sum(GuestEntity.quantity).label("guests_invited")
+            )
             .select_from(GuestEntity)
             .join(EventEntity, GuestEntity.event_id == EventEntity.id)
             .where(
@@ -76,8 +81,17 @@ class HostDashboardService:
                     EventEntity.start <= end_date
                 )
             )
-        ).scalar_one_or_none()
-        return guests_attended_count or 0
+        ).fetchone()  # Using fetchone() to get the first row of the result
+
+        # Extracting the results with a fallback to 0 if None
+        guests_attended = result.guests_attended if result.guests_attended is not None else 0
+        guests_invited = result.guests_invited if result.guests_invited is not None else 0
+
+        return {
+            "guests_attended_count": guests_attended,
+            "guests_invited_count": guests_invited,
+        }
+            
     
     def _get_top_events(self, host_id: int, start_date: datetime, end_date: datetime, limit: int = 3) -> list[dict]:
         events = self._session.execute(
