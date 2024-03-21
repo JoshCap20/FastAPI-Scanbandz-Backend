@@ -3,12 +3,12 @@ from ..exceptions import (
     GuestNotFoundException,
     HostPermissionError,
     EventNotFoundException,
-    NoAvailableTicketsException,
 )
 from ..database import db_session
-from ..models import Guest, Host, BaseGuest, UpdateGuest, GuestValidation
+from ..models import Guest, Host, BaseGuest, UpdateGuest, Event, GuestValidation, BaseTicketReceipt
 from .ticket_service import TicketService
 from .communication_service import CommunicationService
+from .receipt_service import ReceiptService
 
 from typing import Sequence
 from sqlalchemy.orm import Session
@@ -20,16 +20,19 @@ class GuestService:
     _session: Session
     ticket_service: TicketService
     communication_service: CommunicationService
+    receipt_svc: ReceiptService
 
     def __init__(
         self,
         session: Session = Depends(db_session),
         ticket_service: TicketService = Depends(TicketService),
         communication_service: CommunicationService = Depends(CommunicationService),
+        receipt_service: ReceiptService = Depends(ReceiptService),
     ):
         self._session = session
         self.ticket_service = ticket_service
         self.communication_service = communication_service
+        self.receipt_svc = receipt_service
 
     #################################
     #### GUEST RETRIEVAL METHODS ####
@@ -230,7 +233,7 @@ class GuestService:
         )
 
     def create_guest_from_base(
-        self, guest: BaseGuest, ticket_id: int, event_id: int
+        self, guest: BaseGuest, ticket_id: int, event_id: int, create_receipt_flag: bool = False
     ) -> Guest:
         """
         Creates a new guest from a base guest, ticket, and event.
@@ -258,8 +261,40 @@ class GuestService:
 
         model: Guest = entity.to_model()
         self.send_ticket(model)
+        
+        if create_receipt_flag:
+            self._generate_ticket_receipt(model)
 
         return model
+    
+    def _generate_ticket_receipt(self, guest: Guest) -> None:
+        """
+        Generates a receipt for a ticket purchase.
+
+        Args:
+            guest (Guest): The guest object.
+
+        Returns:
+            None
+        """
+        event: Event = guest.event
+        
+        base_receipt: BaseTicketReceipt = BaseTicketReceipt(
+            guest_id=guest.id,
+            event_id=event.id,
+            host_id=event.host.id,
+            quantity=guest.quantity,
+            unit_price=0,
+            total_price=0,
+            total_fee=0,
+            total_paid=0,
+            stripe_account_id="", # TODO: Should we add this?
+            stripe_transaction_id="",
+        )
+        
+        self.receipt_svc.generate_ticket_receipt(base_receipt)
+            
+            
 
     def send_ticket(self, guest: Guest) -> None:
         """

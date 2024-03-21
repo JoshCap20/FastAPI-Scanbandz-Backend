@@ -86,7 +86,7 @@ class TicketPaymentBridge:
 
         if ticket.price <= 0:
             return self.guest_service.create_guest_from_base(
-                guest=guest, ticket_id=ticket.id, event_id=event.id
+                guest=guest, ticket_id=ticket.id, event_id=event.id, create_receipt_flag=True
             )
         return self.payment_service.create_checkout_session(
             guest=guest, ticket=ticket, event=event
