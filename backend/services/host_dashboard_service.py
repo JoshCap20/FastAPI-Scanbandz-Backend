@@ -17,13 +17,28 @@ class HostDashboardService:
         start_date = datetime.strptime(start_date_str, "%Y-%m-%d")
         end_date = datetime.strptime(end_date_str, "%Y-%m-%d")
 
+         # Query for counting distinct events
+        events_count = self._session.execute(
+            select(
+                func.count(func.distinct(EventEntity.id)).label("events_count")
+            ).select_from(EventEntity)
+            .where(
+                and_(
+                    EventEntity.host_id == host_id,
+                    EventEntity.start >= start_date,
+                    EventEntity.start <= end_date,
+                )
+            )
+        ).scalar()
+        
+        # Assuming you've already defined start_date, end_date, and host_id
+
         stats = self._session.execute(
             select(
-                func.count(EventEntity.id).label("events_count"),
-                func.sum(TicketEntity.tickets_sold).label("tickets_sold_count"),
-                (func.sum(TicketEntity.price * TicketEntity.tickets_sold)).label("revenue")
+                func.sum(TicketReceiptEntity.quantity).label("tickets_sold_count"),
+                func.sum(TicketReceiptEntity.total_paid).label("revenue")
             ).select_from(EventEntity)
-            .join(EventEntity.tickets)
+            .join(EventEntity.ticket_receipts)
             .where(
                 and_(
                     EventEntity.host_id == host_id,
@@ -33,12 +48,13 @@ class HostDashboardService:
             )
         ).one()
 
+
         guests_attended_count = self._get_guests_attended_count(host_id, start_date, end_date)
         top_events = self._get_top_events(host_id, start_date, end_date)
         upcoming_events = self._get_upcoming_events(host_id)
 
         return {
-            "events_count": stats.events_count,
+            "events_count": events_count or 0,
             "guests_attended": guests_attended_count,
             "tickets_sold": stats.tickets_sold_count,
             "revenue": str(stats.revenue),
