@@ -66,19 +66,18 @@ class HostDashboardService:
 
     def _get_guests_attended_count(self, host_id: int, start_date: datetime, end_date: datetime) -> int:
         guests_attended_count = self._session.execute(
-            select(func.count())
+            select(func.sum(GuestEntity.used_quantity))
             .select_from(GuestEntity)
             .join(EventEntity, GuestEntity.event_id == EventEntity.id)
             .where(
                 and_(
                     EventEntity.host_id == host_id,
                     EventEntity.start >= start_date,
-                    EventEntity.start <= end_date,
-                    GuestEntity.scan_timestamp.isnot(None),
+                    EventEntity.start <= end_date
                 )
             )
-        ).scalar_one()
-        return guests_attended_count
+        ).scalar_one_or_none()
+        return guests_attended_count or 0
     
     def _get_top_events(self, host_id: int, start_date: datetime, end_date: datetime, limit: int = 3) -> list[dict]:
         events = self._session.execute(
