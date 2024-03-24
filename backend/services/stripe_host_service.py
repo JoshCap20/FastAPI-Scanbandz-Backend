@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 from ..database import db_session
 from ..settings.config import STRIPE_SECRET_KEY
 from ..models import Host
+from ..entities import HostEntity
 from .host_service import HostService
 from ..exceptions import (
     HostStripeAccountNotFoundException,
@@ -178,3 +179,21 @@ class StripeHostService:
 
         account = stripe.Account.create_login_link(host.stripe_id)
         return account.url
+    
+    def reset_stripe_account(self, host_id: int) -> None:
+        """
+        Resets the Stripe account for a host.
+
+        Args:
+            host_id (int): The ID of the host to reset the Stripe account for.
+
+        Raises:
+            HostStripeAccountNotFoundException: If the host does not have a Stripe account.
+        """
+        host: HostEntity = self._session.query(HostEntity).get(host_id)
+        host.stripe_id = None
+        
+        self._session.commit()
+        self._session.refresh(host)
+        
+        self.create_stripe_account_for_host(host_id)

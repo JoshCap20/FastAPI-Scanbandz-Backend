@@ -45,6 +45,23 @@ def register_host(
         content={"message": "Host registered successfully."},
     )
 
+# TODO: Make this depend on current user
+@api.get("/reset/{host_id}/{key}", tags=["Hosts", "Dev", "Stripe"])
+def reset_stripe(
+    host_id: int,
+    key:int,
+    stripe_host_service: StripeHostService = Depends(),
+) -> JSONResponse:
+    if key != 42069:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Unauthorized access.",
+        )
+    stripe_host_service.reset_stripe_account(host_id)
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={"message": "Stripe account ID reset successfully."},
+    )
 
 @api.post("/reset-password", tags=["Hosts"])
 def reset_password_request(
