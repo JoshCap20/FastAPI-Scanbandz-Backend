@@ -10,6 +10,6 @@ services:
       
   worker:
     build: .
-    command: celery -A backend.main.celery_app worker --loglevel=info
+    command: celery -A backend.settings.celery_worker worker --loglevel=info
     volumes:
       - .:/workspace
