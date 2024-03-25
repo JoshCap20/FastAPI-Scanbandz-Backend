@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: github-workflow
+  labels:
+    app: github-workflow
+  namespace: namespace-workflow-1711352227223
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: github-workflow
+  template:
+    metadata:
+      labels:
+        app: github-workflow
+    spec:
+      containers:
+        - name: github-workflow
+          image: scanbandz.azurecr.io/production:latest
+          ports:
+            - containerPort: 8080
