@@ -26,16 +26,27 @@ jobs:
         with:
           creds: ${{ secrets.SCANBANDZCOREAPIS_AZURE_CREDENTIALS }}
 
-      - name: Build and push container image to registry
-        uses: azure/container-apps-deploy-action@v2
+      - name: Build and push Docker images using Docker Compose
+        uses: azure/docker-login@v1
         with:
-          appSourcePath: ${{ github.workspace }} 
-          registryUrl: scanbandz.azurecr.io
-          registryUsername: ${{ secrets.SCANBANDZCOREAPIS_REGISTRY_USERNAME }}
-          registryPassword: ${{ secrets.SCANBANDZCOREAPIS_REGISTRY_PASSWORD }}
-          containerAppName: scanbandzcoreapis
-          resourceGroup: NewScanbandz
-          imageToBuild: scanbandz.azurecr.io/scanbandzcoreapis:${{ github.sha }}
+          login-server: scanbandz.azurecr.io
+          username: ${{secrets.SCANBANDZCOREAPIS_REGISTRY_USERNAME}}
+          password: ${{secrets.SCANBANDZCOREAPIS_REGISTRY_PASSWORD}}
+      - run: |
+          docker-compose build . -t scanbandz.azurecr.io/scanbandzcoreapis:${{ github.sha }}
+          docker-compose push scanbandz.azurecr.io/scanbandzcoreapis:${{ github.sha }}
+
+      - name: 'Deploy to Azure Container Instances'
+        uses: 'azure/aci-deploy@v1'
+        with:
+          registry-login-server: scanbandz.azurecr.io
+          registry-username: ${{ secrets.SCANBANDZCOREAPIS_REGISTRY_USERNAME }}
+          registry-password: ${{ secrets.SCANBANDZCOREAPIS_REGISTRY_PASSWORD }}
+          name: scanbandzcoreapis
+          resource-group: NewScanbandz
+          image: scanbandz.azurecr.io/scanbandzcoreapis:${{ github.sha }}
+          location: 'east us'
+          dns-name-label: scanbandzcoreapis.orangeglacier-2c9d4a67.eastus.azurecontainerapps.io
           
             
 
