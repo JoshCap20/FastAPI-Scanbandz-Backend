@@ -2,6 +2,7 @@ version: '3.8'
 services:
   web:
     build: .
+    image: scanbandz.azurecr.io/scanbandzcoreapis
     command: gunicorn -c gunicorn.conf.py backend.main:app
     ports:
       - "8080:8080"
@@ -10,6 +11,7 @@ services:
       
   worker:
     build: .
+    image: scanbandz.azurecr.io/scanbandzcoreapis
     command: celery -A backend.settings.celery_worker worker --loglevel=info
     volumes:
       - .:/workspace
