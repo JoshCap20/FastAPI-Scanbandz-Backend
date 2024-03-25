@@ -5,9 +5,11 @@ services:
     command: gunicorn -c gunicorn.conf.py backend.main:app
     ports:
       - "8080:8080"
-    depends_on:
-      - redis
-  redis:
-    image: "redis:alpine"
-    ports:
-      - "6379:6379"
+    volumes:
+      - .:/workspace
+      
+  worker:
+    build: .
+    command: celery -A backend.main.celery_app worker --loglevel=info
+    volumes:
+      - .:/workspace
