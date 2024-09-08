@@ -1,7 +1,7 @@
 from azure.communication.email import EmailClient
 
 from ....exceptions.communication_exceptions import EmailFailureException
-from ....settings.config import AZURE_EMAIL_CONNECTION_KEY
+from ....settings import AZURE_EMAIL_CONNECTION_KEY
 
 
 class AzureEmailCommunicationClient:

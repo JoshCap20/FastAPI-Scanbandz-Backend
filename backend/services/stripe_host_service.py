@@ -7,7 +7,7 @@ from fastapi import Depends
 from sqlalchemy.orm import Session
 
 from ..database import db_session
-from ..settings.config import STRIPE_SECRET_KEY
+from ..settings import STRIPE_SECRET_KEY
 from ..models import Host
 from ..entities import HostEntity
 from .host_service import HostService

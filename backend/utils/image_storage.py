@@ -1,7 +1,7 @@
 from typing import BinaryIO
 from azure.storage.blob import BlobServiceClient
 from fastapi import UploadFile
-from ..settings.config import AZURE_STORAGE_CONNECTION_STRING
+from ..settings import AZURE_STORAGE_CONNECTION_STRING
 
 def upload_to_azure(file: BinaryIO, filename: str, container_name: str) -> str:
     """
