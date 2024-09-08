@@ -1,7 +1,7 @@
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, status
 from ..services import StripePaymentService, StripeRefundService, ReceiptService
 
-from ..settings.config import STRIPE_ENDPOINT_SECRET, STRIPE_REFUND_ENDPOINT_SECRET
+from ..settings import STRIPE_ENDPOINT_SECRET, STRIPE_REFUND_ENDPOINT_SECRET
 
 api = APIRouter(prefix="/api/webhook")
 openapi_tags = {

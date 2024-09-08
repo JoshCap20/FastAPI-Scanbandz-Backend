@@ -8,7 +8,7 @@ import stripe
 from decimal import Decimal
 
 from ..database import db_session
-from ..settings.config import STRIPE_SECRET_KEY
+from ..settings import STRIPE_SECRET_KEY
 from ..models import Ticket, Host, Event, BaseGuest, Guest, BaseTicketReceipt, BaseDonationRequest
 from .ticket_service import TicketService
 from .guest_service import GuestService

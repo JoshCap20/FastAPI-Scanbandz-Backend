@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .apis import webhooks, hosts, events, authentication, tickets, guests, receipts
 from .exceptions import HostPermissionError, InvalidCredentialsError
-from .settings.config import MODE
+from .settings import MODE
 
 description = """
 This is the core v2 Scanbandz API. It is a RESTful API that provides endpoints for managing events, tickets, guests, and receipts. It also provides endpoints for user authentication and webhooks for handling Stripe payments. The API is designed to be used by both the host and guest frontends. 

@@ -12,7 +12,7 @@ Example:
         return "This route is only accessible in development mode
 """
 
-from ..settings.config import MODE
+from ..settings import MODE
 from fastapi import HTTPException
 from functools import wraps
 

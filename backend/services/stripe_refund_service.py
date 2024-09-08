@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 import stripe
 from decimal import Decimal
 
-from ..settings.config import STRIPE_SECRET_KEY
+from ..settings import STRIPE_SECRET_KEY
 from .ticket_service import TicketService
 from .guest_service import GuestService
 from .receipt_service import ReceiptService
