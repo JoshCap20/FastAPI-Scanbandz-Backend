@@ -2,11 +2,13 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-The Scanbandz Backend is the primary FastAPI-based backend service that powers the Scanbandz platform, an event management and ticketing solution. This backend handles various services including authentication, ticket verification, event management, payments, and more.
+Note: This project is no longer maintained. Originally private, some parts may need updating for open-source use. It was part of a larger project, but only the backend is included here. Feel free to ask questions or report issues.
 
-In production, this was ran as a scalable cluster of containers. If I was writing this now, I would definitely use a rate limiter with a Redis backend for any auth endpoint and most of them in general honestly at least to some degree.
+Scanbandz processed over $100,000 in payments and donations, and I’m open-sourcing it in case it's helpful to others. In production, the backend ran as a scalable cluster with PostgreSQL and Redis databases, and Celery workers handled background tasks like ticket sending. If revisiting, I would 1) add Redis-backed rate limiting to authentication endpoints and 2) move workers to a separate Docker image and separate workers by task type (e.g., payments, ticketing, communications).
 
-**This was a quick port to open source, so some instructions for running may need to be updated/troubleshooted eventually.**
+Note: Instructions for running may need troubleshooting due to the quick port to open source.
+
+
 
 ## Features
 
