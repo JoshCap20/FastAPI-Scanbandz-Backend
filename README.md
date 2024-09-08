@@ -6,19 +6,20 @@ Note: This project is no longer maintained. Originally private, some parts may n
 
 Scanbandz processed over $100,000 in payments and donations, and I’m open-sourcing it in case it's helpful to others. In production, the backend ran as a scalable cluster with PostgreSQL and Redis databases, and Celery workers handled background tasks like ticket sending. If revisiting, I would 1) add Redis-backed rate limiting to authentication endpoints and 2) move workers to a separate Docker image and separate workers by task type (e.g., payments, ticketing, communications).
 
+I wrote this three times over my college career. The first time was when I learned to code (entirely in Django), the second time was fixing all my mistakes (still in Django), and the third was after much experience and separating the frontend and backend (FastAPI). It was a great learning experience, and I hope it helps you too. I will never open source my Django code as it haunts my sleep.
+
 Note: Instructions for running may need troubleshooting due to the quick port to open source.
-
-
 
 ## Features
 
 - FastAPI backend with multiple APIs to manage events, guests, tickets, and payments.
-- Integration with Celery for background task processing.
+- Integration with Celery and Redis for background task processing.
 - Support for PostgreSQL database with SQLAlchemy and Alembic for migrations.
 - Docker and Docker Compose support for development and production.
 - Supervisord for process management in production.
 
 ## Table of Contents
+
 - [Installation](#installation)
 - [Running the Application](#running-the-application)
 - [Development Setup](#development-setup)
@@ -86,6 +87,7 @@ This will spin up the development environment with a PostgreSQL database.
 ```bash
 docker-compose -f .devcontainer/dev-docker-compose.yml up
 ```
+
 5. Run database migrations:
 
 ```bash
@@ -134,6 +136,7 @@ docker run -p 8080:8080 scanbandz-backend
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ### Key Sections Explained:
+
 - **Features**: Highlights the major functionalities of your backend.
 - **Installation**: Provides steps to set up the project.
 - **Running the Application**: Details how to run the application with `gunicorn`, `supervisord`, and Docker.
