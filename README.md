@@ -4,6 +4,8 @@
 
 The Scanbandz Backend is the primary FastAPI-based backend service that powers the Scanbandz platform, an event management and ticketing solution. This backend handles various services including authentication, ticket verification, event management, payments, and more.
 
+In production, this was ran as a scalable cluster of containers. If I was writing this now, I would definitely use a rate limiter with a Redis backend for any auth endpoint and most of them in general honestly at least to some degree.
+
 **This was a quick port to open source, so some instructions for running may need to be updated/troubleshooted eventually.**
 
 ## Features
